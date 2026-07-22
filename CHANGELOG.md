@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [0.6.3] - 2026-07-23
+
+- Made the conversation area's top-left corner follow each skin's configured radius.
+- Unified clipping across the nested content layers to remove the exposed sidebar wedge.
+- Updated the manager preview to match the corrected corner treatment.
+
 ## [0.6.2] - 2026-07-22
 
 - Added a second 金小獴 theme with a crawling, peeking pose.
@@ -23,4 +29,3 @@ All notable changes to this project are documented here.
 - Added background templates, focus, overlay and blur controls.
 - Added brand identity replacement across startup, sidebar and conversation states.
 - Added optional custom-name memory synchronization and personalized app launchers.
-
