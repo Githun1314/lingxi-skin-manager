@@ -25,7 +25,7 @@
 
 ## 安装
 
-1. 前往 [Releases](https://github.com/Githun1314/lingxi-skin-manager/releases/latest) 下载最新的 `WPS灵犀皮肤管理器-*-macOS.zip`。
+1. 前往 [Releases](https://github.com/Githun1314/lingxi-skin-manager/releases/latest) 下载最新的 `WPS-Lingxi-Skin-Manager-*-macOS.zip`。
 2. 解压后双击 `WPS灵犀皮肤管理器.app`。
 3. 第一次使用时点击“连接并重新启动灵犀”。
 4. 选择主题并点击“应用皮肤”。
@@ -93,4 +93,3 @@ npm start
 本项目是非官方第三方实验项目，与金山办公、WPS 官方团队不存在隶属或授权关系。“WPS”“灵犀”及相关角色、名称和标识的权利归其各自权利人所有。仓库中的演示主题仅用于技术研究与界面个性化展示，请勿将相关品牌或角色素材用于未经授权的商业用途。
 
 代码采用 [MIT License](LICENSE)。视觉和品牌素材的使用边界见 [ASSETS_LICENSE.md](ASSETS_LICENSE.md)。
-
