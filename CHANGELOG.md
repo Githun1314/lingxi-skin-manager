@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here.
 
+## [0.6.4] - 2026-07-23
+
+- Removed the native outline underneath the conversation area's rounded corner.
+- Reduced the sidebar-to-content junction to one clipping layer instead of stacked rounded backgrounds.
+
 ## [0.6.3] - 2026-07-23
 
 - Made the conversation area's top-left corner follow each skin's configured radius.

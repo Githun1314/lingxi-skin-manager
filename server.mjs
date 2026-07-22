@@ -174,7 +174,7 @@ ${wallpaperTarget}::before {
   background-size: ${wallpaperSize} !important; background-position: ${theme.backgroundPosition} !important;
   background-repeat: ${wallpaperRepeat} !important; filter: blur(${theme.backgroundBlur}px) !important;
 }
-.rooter__main { background: transparent !important; backdrop-filter: none !important; }
+.rooter__main { background: ${theme.backgroundScope === "content" ? "var(--lsm-sidebar)" : "transparent"} !important; backdrop-filter: none !important; }
 ${theme.backgroundScope === "full" ? `.rooter__core { background: transparent !important; backdrop-filter: none !important; }` : ""}
 .lingxichat.cowork-chat-app, .cowork-workbench-panel, .assistant-workbench,
 .assistant-workbench__body, .workbench-workflow { background: transparent !important; }
@@ -273,17 +273,29 @@ html[theme-mode="dark"] {
 }
 html, body { background: var(--lsm-background) !important; color: var(--lsm-text) !important; }
 .claw-aside, [class*="aside"] { --kd-color-background-base: var(--lsm-sidebar) !important; }
-.rooter__core,
-.rooter__content,
-.rooter__container,
 .rooter__main {
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  background: var(--lsm-sidebar) !important;
+}
+.rooter__content,
+.rooter__container {
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  background: transparent !important;
+}
+.rooter__core {
+  border: 0 !important;
   border-radius: ${theme.radius}px 0 0 0 !important;
   overflow: hidden !important;
+  background: var(--lsm-background) !important;
   background-clip: padding-box !important;
+  box-shadow: none !important;
 }
 .claw-home {
-  border-radius: ${Math.max(0, theme.radius - 1)}px 0 0 0 !important;
+  border-radius: ${theme.radius}px 0 0 0 !important;
   overflow: hidden auto !important;
+  background: transparent !important;
   background-clip: padding-box !important;
 }
 .claw-aside__mac-logo { width: 28px !important; height: 28px !important; object-fit: contain !important; border-radius: 50% !important; border: 0 !important; outline: 0 !important; box-shadow: none !important; background: transparent !important; }
