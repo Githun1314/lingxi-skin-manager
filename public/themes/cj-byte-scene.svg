@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200" shape-rendering="crispEdges">
+  <defs><pattern id="t" width="64" height="64" patternUnits="userSpaceOnUse"><rect width="64" height="64" fill="#fff5d3"/><path d="M64 0H0V64" fill="none" stroke="#31529a" stroke-opacity=".07" stroke-width="4"/></pattern></defs>
+  <rect width="1920" height="1200" fill="url(#t)"/>
+  <g opacity=".16" fill="#31529a"><rect y="960" width="1920" height="240"/><rect x="64" y="864" width="256" height="96"/><rect x="1600" y="800" width="320" height="160"/></g>
+  <g fill="#e45b2f" opacity=".18"><rect x="256" y="160" width="96" height="96"/><rect x="352" y="256" width="96" height="96"/><rect x="160" y="256" width="96" height="96"/><rect x="1520" y="128" width="64" height="64"/><rect x="1584" y="192" width="64" height="64"/></g>
+  <g fill="#31529a" opacity=".22"><rect x="1120" y="250" width="64" height="64"/><rect x="1184" y="314" width="64" height="64"/><rect x="1760" y="420" width="64" height="64"/></g>
+</svg>

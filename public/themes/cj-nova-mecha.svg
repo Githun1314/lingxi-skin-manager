@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e8f4ff"/><stop offset=".55" stop-color="#f7f9ff"/><stop offset="1" stop-color="#dfe9ff"/></linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#132a58"/><stop offset=".55" stop-color="#1769ff"/><stop offset="1" stop-color="#5ee5ff"/></linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#1769ff" stroke-opacity=".08"/></pattern>
+  </defs>
+  <rect width="1920" height="1200" fill="url(#bg)"/><rect width="1920" height="1200" fill="url(#grid)"/>
+  <g fill="none" stroke="#1769ff" stroke-opacity=".15"><path d="M320 0L0 320M620 0L0 620M1920 210L930 1200" stroke-width="3"/><circle cx="1380" cy="520" r="430"/><circle cx="1380" cy="520" r="350" stroke-dasharray="20 18"/></g>
+  <g opacity=".18" fill="#1769ff"><path d="M0 890L480 650 840 1200H0Z"/><path d="M810 0L1120 0 920 330Z"/></g>
+  <g transform="translate(1310 165)">
+    <path d="M120 85L310 20 500 90 565 310 500 610 315 760 120 615 45 305Z" fill="#fff" stroke="#102b60" stroke-width="18"/>
+    <path d="M75 270L180 115 310 80 445 120 535 270 470 565 310 690 145 560Z" fill="url(#metal)"/>
+    <path d="M125 285L265 225 310 330 355 225 490 285 430 430 340 455 310 545 275 455 185 430Z" fill="#071b40"/>
+    <path d="M176 305L268 275 285 335 205 362Z" fill="#65f4ff"/><path d="M344 335L362 275 452 305 425 362Z" fill="#65f4ff"/>
+    <path d="M310 80V-25M185 117L130 12M438 120L500 18" stroke="#1769ff" stroke-width="18" stroke-linecap="round"/>
+    <circle cx="310" cy="520" r="34" fill="#65f4ff" stroke="#fff" stroke-width="10"/>
+  </g>
+  <g font-family="-apple-system,Arial,sans-serif" fill="#102b60"><text x="92" y="1050" font-size="42" font-weight="800" letter-spacing="8">NOVA // READY</text><text x="94" y="1102" font-size="20" opacity=".55" letter-spacing="4">ORIGINAL MECHA UNIT · CJ INSPIRED</text></g>
+</svg>

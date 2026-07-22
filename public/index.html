@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>灵犀皮肤管理器</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">LINGXI SKIN LAB · V2</p>
+        <h1>把灵犀换成你的样子</h1>
+        <p class="lead">自定义品牌形象，自动提取配色，再决定是否加入背景装饰。</p>
+      </div>
+      <div class="status-card" id="statusCard">
+        <span class="status-dot"></span>
+        <div><strong id="statusTitle">正在检查连接</strong><small id="statusText">请稍候…</small></div>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <div class="editor-panel">
+        <div class="section-heading">
+          <div><span>01</span><h2>选择科技风格</h2></div>
+          <p>2 个 AI 原生风格 + 4 个 ChinaJoy IP + 4 个 WPS 家族 IP</p>
+        </div>
+        <div class="presets" id="presets"></div>
+
+        <div class="section-heading compact">
+          <div><span>02</span><h2>加入你的品牌形象</h2></div>
+          <p>覆盖启动页、对话状态与工作台</p>
+        </div>
+        <div class="brand-row">
+          <div class="upload-zone brand-upload" id="brandUploadZone" tabindex="0">
+            <input type="file" id="brandImageInput" accept="image/png,image/jpeg,image/webp" hidden>
+            <div class="upload-preview" id="brandPreview">＋</div>
+            <div><strong>上传 Logo 或形象</strong><small>建议使用方形 PNG / WebP</small></div>
+            <button type="button" class="text-button" id="removeBrandImage" hidden>移除</button>
+          </div>
+          <label class="name-field">显示名称<input id="brandName" maxlength="12" value="灵犀" placeholder="输入名称"></label>
+        </div>
+        <div class="palette-result" id="paletteResult" hidden>
+          <div><strong>已按形象自动配色</strong><small>提取主色，并补齐背景、卡片和文字对比度</small></div>
+          <div class="palette-chips" id="paletteChips"></div>
+          <button type="button" id="reExtractPalette">重新取色</button>
+        </div>
+        <div class="launcher-option">
+          <div><strong>个性化应用入口</strong><small>把这套 Logo 和名称生成到 Finder、启动台或程序坞；实际运行的仍是官方 WPS 灵犀。</small></div>
+          <button type="button" id="createLauncherButton" disabled>生成应用入口</button>
+        </div>
+        <label class="identity-memory">
+          <input type="checkbox" id="syncIdentityMemory" checked>
+          <span><strong>同步名称到灵犀记忆</strong><small>创建独立的“品牌助手身份”记忆，让它在自我介绍时使用新名称；恢复默认会移除这条记忆。</small></span>
+        </label>
+
+        <div class="section-heading compact">
+          <div><span>03</span><h2>调整颜色</h2></div>
+          <p>自动取色后仍可手动微调</p>
+        </div>
+        <div class="color-grid">
+          <label>强调色<input type="color" id="primary"></label>
+          <label>页面背景<input type="color" id="background"></label>
+          <label>侧边栏<input type="color" id="sidebar"></label>
+          <label>卡片颜色<input type="color" id="card"></label>
+          <label>文字颜色<input type="color" id="text"></label>
+        </div>
+        <label class="range-row"><span>圆角大小 <b id="radiusValue">16px</b></span><input type="range" id="radius" min="2" max="26" value="16"></label>
+
+        <div class="section-heading compact">
+          <div><span>04</span><h2>界面装饰（可选）</h2></div>
+          <p>独立于 Logo，不上传也可以</p>
+        </div>
+        <div class="upload-zone" id="decorationUploadZone" tabindex="0">
+          <input type="file" id="decorationImageInput" accept="image/png,image/jpeg,image/webp" hidden>
+          <div class="upload-icon">＋</div>
+          <div><strong>上传背景或装饰形象</strong><small>作为整体背景，或吸附在对话框边缘</small></div>
+          <button type="button" class="text-button" id="removeDecoration" hidden>移除</button>
+        </div>
+        <div class="image-options" id="decorationOptions" hidden>
+          <div class="segmented">
+            <button type="button" data-decoration-mode="wallpaper" class="active">作为背景</button>
+            <button type="button" data-decoration-mode="mascot">独立挂件</button>
+          </div>
+          <div id="wallpaperOptions">
+            <div class="background-control-grid">
+              <label>覆盖区域<select id="backgroundScope"><option value="content">对话区域</option><option value="full">整个窗口</option></select></label>
+              <label>图片适配<select id="backgroundFit"><option value="cover">裁切铺满</option><option value="contain">完整显示</option><option value="original">原始尺寸</option><option value="tile">纹理平铺</option></select></label>
+              <label>视觉焦点<select id="backgroundPosition"><option value="center">居中</option><option value="top">顶部</option><option value="right">右侧</option><option value="left">左侧</option><option value="bottom">底部</option></select></label>
+            </div>
+            <label class="range-row"><span>内容遮罩 <b id="backgroundOverlayValue">52%</b></span><input type="range" id="backgroundOverlay" min="8" max="88" value="52"></label>
+            <label class="range-row"><span>背景柔化 <b id="backgroundBlurValue">0px</b></span><input type="range" id="backgroundBlur" min="0" max="16" value="0"></label>
+            <div class="template-guide">
+              <div><strong>深度皮肤画布建议：1920 × 1200</strong><small>侧栏和底部输入区保持低细节；主体放在右上或两侧，中央阅读区留空。</small></div>
+              <a href="/background-template.svg" download="灵犀背景留白模板-1920x1200.svg">下载留白模板</a>
+            </div>
+          </div>
+        </div>
+        <div class="composer-card" id="composerOptions">
+          <label class="composer-switch"><span><strong>对话框动态挂件</strong><small>跟随输入框宽度、位置和窗口尺寸自动缩放移动</small></span><input type="checkbox" id="composerDecorationEnabled"></label>
+          <div class="background-control-grid">
+            <label>挂件素材<select id="composerDecorationSource"><option value="hanger">主题趴框角色</option><option value="brand">品牌 / IP Logo</option><option value="decoration">背景 / 装饰图</option></select></label>
+            <label>吸附位置<select id="composerAnchor"><option value="right-top">输入框右侧上沿</option><option value="left-top">输入框左侧上沿</option><option value="top-center">输入框上沿居中</option><option value="right-bottom">输入框右侧下沿</option><option value="left-bottom">输入框左侧下沿</option></select></label>
+          </div>
+          <label class="range-row"><span>相对尺寸 <b id="composerScaleValue">20%</b></span><input type="range" id="composerScale" min="12" max="34" value="20"></label>
+          <label class="range-row"><span>趴边深度 <b id="composerOverlapValue">32%</b></span><input type="range" id="composerOverlap" min="8" max="70" value="32"></label>
+          <label class="range-row" id="mascotOpacityRow" hidden><span>形象透明度 <b id="decorationOpacityValue">22%</b></span><input type="range" id="decorationOpacity" min="5" max="100" value="22"></label>
+        </div>
+      </div>
+
+      <aside class="preview-panel">
+        <div class="preview-top"><span>实时预览 · 深浅模式均已适配</span><button type="button" id="previewModeToggle">切到日间</button><i></i><i></i><i></i></div>
+        <div class="mock-window" id="mockWindow">
+          <div class="mock-wallpaper" id="mockWallpaper"></div>
+          <div class="mock-titlebar"><i></i><i></i><i></i></div>
+          <nav>
+            <div class="brand"><span class="preview-logo" id="previewLogo">✦</span><b id="previewBrandName">灵犀</b></div>
+            <div class="new-chat">＋ 新会话</div>
+            <div class="nav-item">ϟ　技能</div>
+            <div class="nav-item">◷　定时任务</div>
+            <div class="nav-item">⌁　频道</div>
+            <small>项目　⌄</small>
+            <div class="history">▭　WAIC</div>
+            <small>群聊　›</small>
+            <div class="history muted">历史会话</div>
+          </nav>
+          <section class="mock-main">
+            <div class="mock-content"><h3>Hi，今天可以帮你做什么？</h3></div>
+            <div class="mock-input" id="mockInput">
+              <span>擅长解决更复杂的任务，输入/使用技能</span>
+              <div class="mock-input-tools"><i>＋</i><em>▣ 专家模式：开</em><i>▱</i><i>ϟ</i><small>Max 模式⌄</small><b>♩</b></div>
+            </div>
+            <div class="mock-projects"><div><b>项目</b><em>最近文档</em></div><p>项目汇聚相同主题的会话与文档，作为你与助手对话时的共同上下文。</p><span><strong>＋ 新建项目</strong></span><i><strong>▭ WAIC</strong></i></div>
+          </section>
+          <div class="mock-mascot" id="mockMascot"></div>
+        </div>
+
+        <div class="action-card">
+          <div class="action-copy"><strong>保存并应用皮肤</strong><small id="actionHint">第一次使用需要重新启动一次灵犀</small></div>
+          <div class="buttons">
+            <button class="secondary" id="resetButton">恢复默认</button>
+            <button class="primary" id="applyButton">应用皮肤</button>
+          </div>
+          <button class="connect-button" id="connectButton">连接并重新启动灵犀</button>
+          <p class="notice" id="notice"></p>
+        </div>
+
+        <div class="share-card">
+          <strong>准备分享给别人？</strong>
+          <p>使用已打包的独立应用；对方只需安装 WPS 灵犀。</p>
+          <a href="/distribution.html" target="_blank">查看分发说明 →</a>
+        </div>
+      </aside>
+    </section>
+  </main>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

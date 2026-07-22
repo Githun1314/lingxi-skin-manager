@@ -1,0 +1,37 @@
+name: 适配问题
+description: 报告界面错位、颜色、背景或挂件问题
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 问题描述
+      description: 请说明实际表现和你期望看到的效果。
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 环境
+      placeholder: macOS 版本、WPS 灵犀版本、日间或夜间模式
+    validations:
+      required: true
+  - type: input
+    id: theme
+    attributes:
+      label: 皮肤
+      placeholder: 例如 金小獴探头
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      placeholder: 1. 选择主题 2. 点击应用 3. 调整窗口……
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: 截图
+      description: 请先隐藏历史会话、项目名和其他个人信息。
+

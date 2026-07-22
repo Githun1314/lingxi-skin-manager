@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200">
+  <defs>
+    <linearGradient id="candy" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff84c8"/><stop offset=".5" stop-color="#b46bff"/><stop offset="1" stop-color="#5ed7e8"/></linearGradient>
+    <linearGradient id="soft" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff2f9"/><stop offset="1" stop-color="#eee7ff"/></linearGradient>
+  </defs>
+  <rect width="1920" height="1200" fill="url(#soft)"/>
+  <g opacity=".2" fill="url(#candy)"><circle cx="220" cy="230" r="180"/><circle cx="620" cy="1080" r="260"/><circle cx="1740" cy="180" r="240"/><path d="M880 0H1250L1050 370Z"/></g>
+  <g fill="none" stroke="#cc4fa3" stroke-opacity=".15" stroke-width="5"><path d="M0 820Q360 660 720 820T1440 820T2160 820"/><path d="M0 890Q360 730 720 890T1440 890T2160 890"/></g>
+  <g transform="translate(1320 250)">
+    <ellipse cx="310" cy="610" rx="290" ry="82" fill="#6d4d7c" opacity=".13"/>
+    <path d="M108 238Q78 80 240 54Q324-18 404 70Q548 70 536 224Q638 312 538 430Q516 570 372 548Q276 630 188 548Q44 558 58 414Q-30 318 108 238Z" fill="url(#candy)" stroke="#fff" stroke-width="20"/>
+    <path d="M122 248Q105 124 245 116Q320 58 390 130Q506 142 486 252Q558 328 482 414Q454 504 352 482Q278 548 210 486Q102 496 112 396Q34 328 122 248Z" fill="#fff7fc"/>
+    <ellipse cx="230" cy="300" rx="27" ry="38" fill="#40243a"/><ellipse cx="390" cy="300" rx="27" ry="38" fill="#40243a"/>
+    <path d="M268 374Q310 412 352 374" fill="none" stroke="#cc4fa3" stroke-width="18" stroke-linecap="round"/>
+    <circle cx="176" cy="370" r="32" fill="#ff9bcf" opacity=".65"/><circle cx="444" cy="370" r="32" fill="#ff9bcf" opacity=".65"/>
+    <path d="M156 100L110 26M464 118L526 48" stroke="#b46bff" stroke-width="24" stroke-linecap="round"/>
+  </g>
+  <g fill="#cc4fa3" opacity=".4"><path d="M1100 270l20 42 46 7-33 32 8 46-41-22-41 22 8-46-33-32 46-7Z"/><circle cx="1180" cy="570" r="20"/><circle cx="1040" cy="690" r="12"/></g>
+  <g font-family="-apple-system,Arial,sans-serif" fill="#5d3154"><text x="92" y="1040" font-size="48" font-weight="800" letter-spacing="5">MOCHI PLANET</text><text x="96" y="1098" font-size="20" opacity=".6" letter-spacing="4">ORIGINAL DESIGNER TOY IP · SWEET MODE</text></g>
+</svg>

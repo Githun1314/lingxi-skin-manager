@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fbf6e9"/><stop offset="1" stop-color="#e8ddc8"/></linearGradient>
+    <linearGradient id="jade" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c7f0df"/><stop offset=".48" stop-color="#3aa891"/><stop offset="1" stop-color="#0e655e"/></linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
+  </defs>
+  <rect width="1920" height="1200" fill="url(#paper)"/>
+  <circle cx="1580" cy="260" r="145" fill="#cc5d4b" opacity=".72"/>
+  <g fill="#6b786d"><path d="M0 900Q260 590 520 900T1040 900T1560 900T2080 900V1200H0Z" opacity=".12"/><path d="M0 1010Q320 770 650 1010T1300 1010T1950 1010V1200H0Z" opacity=".15"/></g>
+  <g fill="none" stroke="#177a6e" stroke-opacity=".18" stroke-width="3"><path d="M90 170Q430 30 760 190T1430 160"/><path d="M180 245Q480 120 770 260"/></g>
+  <g transform="translate(1290 265)">
+    <path d="M130 210Q62 85 185 34Q285-4 342 94Q410 22 505 66Q612 120 550 244Q642 292 598 392Q560 482 438 465Q390 575 270 548Q165 525 168 420Q58 404 72 302Q80 238 130 210Z" fill="url(#jade)" stroke="#315c50" stroke-width="14"/>
+    <path d="M182 186Q152 76 220 30M452 154Q500 56 565 58" fill="none" stroke="#315c50" stroke-width="24" stroke-linecap="round"/>
+    <path d="M205 260Q250 220 292 260M385 260Q427 220 472 260" fill="none" stroke="#173e38" stroke-width="16" stroke-linecap="round"/>
+    <path d="M295 350Q337 390 382 350" fill="none" stroke="#173e38" stroke-width="14" stroke-linecap="round"/>
+    <circle cx="338" cy="310" r="25" fill="#f6d59d"/><path d="M318 304L338 280 358 304 338 328Z" fill="#cc5d4b"/>
+    <path d="M130 416Q25 486 78 588Q130 680 252 602" fill="none" stroke="#177a6e" stroke-width="48" stroke-linecap="round"/>
+  </g>
+  <g font-family="STSong,Songti SC,serif" fill="#315c50"><text x="100" y="1028" font-size="52" font-weight="700" letter-spacing="10">山 海 灵 兽</text><text x="104" y="1090" font-size="22" opacity=".62" letter-spacing="6">原创东方幻想 IP · 云岚与玉</text></g>
+  <g fill="#cc5d4b" opacity=".42"><circle cx="190" cy="340" r="7"/><circle cx="235" cy="305" r="5"/><circle cx="275" cy="360" r="9"/></g>
+</svg>

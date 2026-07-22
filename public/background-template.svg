@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#eef2f5"/><stop offset="1" stop-color="#e7e1f1"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#53606f" stroke-opacity=".08"/>
+    </pattern>
+  </defs>
+  <rect width="1920" height="1200" fill="url(#base)"/>
+  <rect width="1920" height="1200" fill="url(#grid)"/>
+  <rect x="0" y="0" width="384" height="1200" fill="#334155" fill-opacity=".12"/>
+  <rect x="384" y="0" width="1536" height="92" fill="#334155" fill-opacity=".07"/>
+  <rect x="540" y="150" width="960" height="720" rx="36" fill="#fff" fill-opacity=".34" stroke="#fff" stroke-width="3" stroke-dasharray="14 12"/>
+  <rect x="500" y="930" width="1080" height="170" rx="34" fill="#fff" fill-opacity=".5" stroke="#fff" stroke-width="3" stroke-dasharray="14 12"/>
+  <path d="M1510 120H1880V850H1510Z" fill="#00a38a" fill-opacity=".07" stroke="#00a38a" stroke-opacity=".5" stroke-width="3" stroke-dasharray="12 10"/>
+  <g font-family="-apple-system, PingFang SC, sans-serif" fill="#27313d">
+    <text x="54" y="70" font-size="26" font-weight="700">灵犀深度皮肤留白模板 · 1920 × 1200</text>
+    <text x="54" y="111" font-size="18" fill-opacity=".65">可直接在此 SVG 上绘制，完成后导出 PNG / JPG / WebP</text>
+    <text x="64" y="600" font-size="25" font-weight="700">侧栏低细节区</text>
+    <text x="64" y="636" font-size="17" fill-opacity=".65">Logo、导航和历史会话</text>
+    <text x="750" y="490" font-size="30" font-weight="700">中央阅读留白区</text>
+    <text x="690" y="535" font-size="19" fill-opacity=".65">避免人脸、文字与强烈明暗对比</text>
+    <text x="850" y="1020" font-size="24" font-weight="700">输入框安全区</text>
+    <text x="825" y="1058" font-size="17" fill-opacity=".65">保持简洁，避免高频纹理</text>
+    <text x="1570" y="470" font-size="24" font-weight="700">推荐主体区</text>
+    <text x="1555" y="507" font-size="17" fill-opacity=".65">人物 / IP / 光效</text>
+    <text x="1555" y="535" font-size="17" fill-opacity=".65">尽量靠右或右上</text>
+  </g>
+</svg>
