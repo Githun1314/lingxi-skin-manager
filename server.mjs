@@ -273,6 +273,19 @@ html[theme-mode="dark"] {
 }
 html, body { background: var(--lsm-background) !important; color: var(--lsm-text) !important; }
 .claw-aside, [class*="aside"] { --kd-color-background-base: var(--lsm-sidebar) !important; }
+.rooter__core,
+.rooter__content,
+.rooter__container,
+.rooter__main {
+  border-radius: ${theme.radius}px 0 0 0 !important;
+  overflow: hidden !important;
+  background-clip: padding-box !important;
+}
+.claw-home {
+  border-radius: ${Math.max(0, theme.radius - 1)}px 0 0 0 !important;
+  overflow: hidden auto !important;
+  background-clip: padding-box !important;
+}
 .claw-aside__mac-logo { width: 28px !important; height: 28px !important; object-fit: contain !important; border-radius: 50% !important; border: 0 !important; outline: 0 !important; box-shadow: none !important; background: transparent !important; }
 .claw-aside__mac-text { color: var(--lsm-text) !important; }
 textarea, input, [contenteditable="true"] { caret-color: var(--lsm-primary) !important; }
