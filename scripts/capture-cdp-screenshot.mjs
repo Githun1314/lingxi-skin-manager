@@ -4,9 +4,15 @@ const outputPath = process.argv[2];
 if (!outputPath) throw new Error("Usage: node capture-cdp-screenshot.mjs <output.png>");
 const waitForContent = process.argv.includes("--wait-for-content");
 
-const targets = await fetch("http://127.0.0.1:9229/json/list").then(response => response.json());
-const pages = targets.filter(target => target.type === "page" && target.webSocketDebuggerUrl);
-if (!pages.length) throw new Error("No debuggable Lingxi page was found.");
+let pages = [];
+const targetDeadline = Date.now() + 90_000;
+do {
+  const targets = await fetch("http://127.0.0.1:9229/json/list").then(response => response.json());
+  pages = targets.filter(target => target.type === "page" && target.webSocketDebuggerUrl);
+  if (pages.length) break;
+  await new Promise(resolve => setTimeout(resolve, 1000));
+} while (Date.now() < targetDeadline);
+if (!pages.length) throw new Error("No debuggable Lingxi page appeared within 90 seconds.");
 
 const target = pages.find(page => /lingxi|kdocs|wps/i.test(`${page.url} ${page.title}`)) || pages[0];
 console.log(`Capturing target: ${target.title || "(untitled)"} ${target.url}`);

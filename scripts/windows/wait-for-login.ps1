@@ -40,26 +40,27 @@ for ($index = 0; $index -lt 120; $index++) {
 if (-not $applied) { throw "No logged-in Lingxi conversation page appeared before the QR-login timeout." }
 Start-Sleep -Seconds 5
 
-$clientPng = Join-Path $env:RUNNER_TEMP "lingxi-windows-themed-client.png"
-node (Join-Path $repoRoot "scripts\capture-cdp-screenshot.mjs") $clientPng
+$clientRaw = Join-Path $env:RUNNER_TEMP "lingxi-windows-themed-client.raw"
+node (Join-Path $repoRoot "scripts\capture-cdp-screenshot.mjs") $clientRaw --wait-for-content
+if ($LASTEXITCODE -ne 0) { throw "Capturing the rendered themed Lingxi page failed." }
 
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
-$desktopPng = Join-Path $env:RUNNER_TEMP "lingxi-windows-themed-desktop.png"
+$desktopRaw = Join-Path $env:RUNNER_TEMP "lingxi-windows-themed-desktop.raw"
 $bounds = [System.Windows.Forms.SystemInformation]::VirtualScreen
 $bitmap = New-Object System.Drawing.Bitmap $bounds.Width, $bounds.Height
 $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
 try {
   $graphics.CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size)
-  $bitmap.Save($desktopPng, [System.Drawing.Imaging.ImageFormat]::Png)
+  $bitmap.Save($desktopRaw, [System.Drawing.Imaging.ImageFormat]::Png)
 } finally {
   $graphics.Dispose()
   $bitmap.Dispose()
 }
 
 if ($env:WINDOWS_SCREENSHOT_KEY) {
-  & (Join-Path $PSScriptRoot "protect-screenshot.ps1") -InputPath $clientPng -OutputPath "$clientPng.enc"
-  & (Join-Path $PSScriptRoot "protect-screenshot.ps1") -InputPath $desktopPng -OutputPath "$desktopPng.enc"
-}
+  & (Join-Path $PSScriptRoot "protect-screenshot.ps1") -InputPath $clientRaw -OutputPath (Join-Path $env:RUNNER_TEMP "lingxi-windows-themed-client.png.enc")
+  & (Join-Path $PSScriptRoot "protect-screenshot.ps1") -InputPath $desktopRaw -OutputPath (Join-Path $env:RUNNER_TEMP "lingxi-windows-themed-desktop.png.enc")
+} else { throw "WINDOWS_SCREENSHOT_KEY is required for themed captures." }
 
 Write-Host "Logged-in themed screenshots captured."

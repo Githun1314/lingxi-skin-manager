@@ -150,8 +150,9 @@ try {
     Write-Host "Theme applied to a matching page: $($applyResult.applied)"
     Start-Sleep -Seconds 4
 
-    $clientPng = Join-Path $env:RUNNER_TEMP "lingxi-windows-login-client.png"
-    node (Join-Path $repoRoot "scripts\capture-cdp-screenshot.mjs") $clientPng --wait-for-content
+    $clientRaw = Join-Path $env:RUNNER_TEMP "lingxi-windows-login-client.raw"
+    node (Join-Path $repoRoot "scripts\capture-cdp-screenshot.mjs") $clientRaw --wait-for-content
+    if ($LASTEXITCODE -ne 0) { throw "Capturing the rendered Lingxi login page failed." }
 
     Add-Type -AssemblyName System.Windows.Forms
     Add-Type -AssemblyName System.Drawing
@@ -160,16 +161,16 @@ try {
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     try {
       $graphics.CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size)
-      $desktopPng = Join-Path $env:RUNNER_TEMP "lingxi-windows-login-desktop.png"
-      $bitmap.Save($desktopPng, [System.Drawing.Imaging.ImageFormat]::Png)
+      $desktopRaw = Join-Path $env:RUNNER_TEMP "lingxi-windows-login-desktop.raw"
+      $bitmap.Save($desktopRaw, [System.Drawing.Imaging.ImageFormat]::Png)
     } finally {
       $graphics.Dispose()
       $bitmap.Dispose()
     }
     if ($env:WINDOWS_SCREENSHOT_KEY) {
-      & (Join-Path $PSScriptRoot "protect-screenshot.ps1") -InputPath $clientPng -OutputPath "$clientPng.enc"
-      & (Join-Path $PSScriptRoot "protect-screenshot.ps1") -InputPath $desktopPng -OutputPath "$desktopPng.enc"
-    }
+      & (Join-Path $PSScriptRoot "protect-screenshot.ps1") -InputPath $clientRaw -OutputPath (Join-Path $env:RUNNER_TEMP "lingxi-windows-login-client.png.enc")
+      & (Join-Path $PSScriptRoot "protect-screenshot.ps1") -InputPath $desktopRaw -OutputPath (Join-Path $env:RUNNER_TEMP "lingxi-windows-login-desktop.png.enc")
+    } else { throw "WINDOWS_SCREENSHOT_KEY is required for QR-login captures." }
   } finally {
     if (-not $keepAliveForLogin -and $manager -and -not $manager.HasExited) { Stop-Process -Id $manager.Id -Force }
   }
