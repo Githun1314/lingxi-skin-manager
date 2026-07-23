@@ -39,7 +39,7 @@
 3. 双击 `Start-Lingxi-Skin-Manager.cmd`，浏览器会自动打开管理页面。
 4. 第一次使用时点击“连接并重新启动灵犀”，再选择并应用皮肤。
 
-Windows 包已内置运行环境，不需要安装 Node.js。当前为首个 Windows 预览版；详细路径识别与排查方法见 [Windows 使用说明](WINDOWS.md)。
+Windows 包不需要手动安装 Node.js；首次启动会从 Node.js 官方站点自动下载运行环境并校验 SHA256，后续不会重复下载。当前为首个 Windows 预览版；详细路径识别与排查方法见 [Windows 使用说明](WINDOWS.md)。
 
 ## 系统要求
 
