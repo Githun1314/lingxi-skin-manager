@@ -6,11 +6,11 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v0.7.3
+        default: v0.8.0
       title:
         description: Release title
         required: true
-        default: v0.7.3 · macOS 与 Windows 双平台支持
+        default: v0.8.0 · 动态避让与四套游戏 IP 概念主题
       base_mac_tag:
         description: Stable macOS application shell release
         required: true
