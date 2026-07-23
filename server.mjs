@@ -5,6 +5,8 @@ import os from "node:os";
 import { spawn, execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { pathToFileURL } from "node:url";
+import { isSea, getAsset } from "node:sea";
+import { fileExists, findWindowsLingxiExecutable } from "./lib/windows-platform.mjs";
 
 const execFileAsync = promisify(execFile);
 const HOST = "127.0.0.1";
@@ -13,6 +15,7 @@ const DEBUG_PORT = 9229;
 const PLATFORM = process.platform;
 const IS_MACOS = PLATFORM === "darwin";
 const IS_WINDOWS = PLATFORM === "win32";
+const IS_SEA = isSea();
 const MAC_APP_PATH = "/Applications/WPS 灵犀.app";
 const MAC_APP_EXECUTABLE = `${MAC_APP_PATH}/Contents/MacOS/WPS 灵犀`;
 const PUBLIC_DIR = path.join(import.meta.dirname, "public");
@@ -641,57 +644,6 @@ async function restoreConnectedPages() {
   return pages.length;
 }
 
-async function fileExists(file) {
-  try { await fs.access(file); return true; }
-  catch { return false; }
-}
-
-function compareVersionNames(left, right) {
-  const a = left.split(/[^0-9]+/).filter(Boolean).map(Number);
-  const b = right.split(/[^0-9]+/).filter(Boolean).map(Number);
-  for (let index = 0; index < Math.max(a.length, b.length); index += 1) {
-    const difference = (b[index] || 0) - (a[index] || 0);
-    if (difference) return difference;
-  }
-  return right.localeCompare(left);
-}
-
-async function findWindowsLingxiExecutable() {
-  const explicit = process.env.LINGXI_APP_PATH;
-  if (explicit && await fileExists(explicit)) return explicit;
-
-  const roots = [
-    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, "Kingsoft", "WPS Office"),
-    process.env.ProgramFiles && path.join(process.env.ProgramFiles, "Kingsoft", "WPS Office"),
-    process.env["ProgramFiles(x86)"] && path.join(process.env["ProgramFiles(x86)"], "Kingsoft", "WPS Office"),
-    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, "Kingsoft", "WPS Lingxi"),
-    process.env.ProgramFiles && path.join(process.env.ProgramFiles, "Kingsoft", "WPS Lingxi")
-  ].filter(Boolean);
-
-  for (const root of [...new Set(roots)]) {
-    const directCandidates = [
-      path.join(root, "office6", "wpslingxi.exe"),
-      path.join(root, "wpslingxi.exe"),
-      path.join(root, "WPS Lingxi.exe")
-    ];
-    for (const candidate of directCandidates) if (await fileExists(candidate)) return candidate;
-
-    try {
-      const entries = (await fs.readdir(root, { withFileTypes: true }))
-        .filter(entry => entry.isDirectory())
-        .sort((a, b) => compareVersionNames(a.name, b.name));
-      for (const entry of entries) {
-        for (const relative of [path.join("office6", "wpslingxi.exe"), "wpslingxi.exe", "WPS Lingxi.exe"]) {
-          const candidate = path.join(root, entry.name, relative);
-          if (await fileExists(candidate)) return candidate;
-        }
-      }
-    } catch {}
-  }
-
-  throw new Error("未找到 WPS 灵犀。请先安装 Windows 版灵犀，或设置 LINGXI_APP_PATH 指向 wpslingxi.exe");
-}
-
 async function findLingxiExecutable() {
   if (cachedLingxiExecutable && await fileExists(cachedLingxiExecutable)) return cachedLingxiExecutable;
   if (IS_MACOS) {
@@ -870,11 +822,12 @@ async function createWindowsPersonalLauncher() {
 
   const managerScript = path.join(import.meta.dirname, "server.mjs");
   const launchScript = path.join(launcherDir, "launch.ps1");
+  const managerArguments = IS_SEA ? "@('--background')" : "@($serverArgument)";
   const launchPowerShell = `$ErrorActionPreference = 'SilentlyContinue'\n` +
     `$node = ${powerShellQuote(process.execPath)}\n` +
     `$server = ${powerShellQuote(managerScript)}\n` +
     `$serverArgument = '"' + $server + '"'\n` +
-    `try { Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:17363/api/status' -TimeoutSec 1 | Out-Null } catch { Start-Process -WindowStyle Hidden -FilePath $node -ArgumentList @($serverArgument) }\n` +
+    `try { Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:17363/api/status' -TimeoutSec 1 | Out-Null } catch { Start-Process -WindowStyle Hidden -FilePath $node -ArgumentList ${managerArguments} }\n` +
     `for ($i = 0; $i -lt 60; $i++) { try { $status = Invoke-RestMethod -Uri 'http://127.0.0.1:17363/api/status' -TimeoutSec 1; break } catch { Start-Sleep -Milliseconds 100 } }\n` +
     `if ($status.connected) { Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:17363/api/apply' -ContentType 'application/json' -Body '{}' | Out-Null } else { Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:17363/api/restart' -ContentType 'application/json' -Body '{}' | Out-Null }\n`;
   await fs.writeFile(launchScript, launchPowerShell, "utf8");
@@ -1027,10 +980,12 @@ async function serveStatic(response, url) {
     response.writeHead(403); response.end(); return;
   }
   try {
-    const data = await fs.readFile(file);
+    const assetKey = `public/${normalized.replaceAll("\\", "/")}`;
+    const data = IS_SEA ? Buffer.from(getAsset(assetKey)) : await fs.readFile(file);
     response.writeHead(200, { "Content-Type": MIME[path.extname(file)] || "application/octet-stream", "Cache-Control": "no-cache" });
     response.end(data);
-  } catch {
+  } catch (error) {
+    if (IS_SEA) console.error(`Embedded asset failed: public/${normalized.replaceAll("\\", "/")} (${error.message})`);
     response.writeHead(404); response.end("Not found");
   }
 }
@@ -1042,11 +997,22 @@ const server = http.createServer(async (request, response) => {
 });
 
 server.on("error", error => {
-  if (error.code === "EADDRINUSE") process.exit(0);
+  if (error.code === "EADDRINUSE") {
+    if (IS_WINDOWS && IS_SEA && !process.argv.includes("--background")) {
+      spawn("explorer.exe", [`http://${HOST}:${PORT}`], { detached: true, stdio: "ignore" }).unref();
+    }
+    process.exit(0);
+  }
   throw error;
 });
 
-server.listen(PORT, HOST, () => console.log(`Lingxi Skin Manager: http://${HOST}:${PORT}`));
+server.listen(PORT, HOST, () => {
+  const managerUrl = `http://${HOST}:${PORT}`;
+  console.log(`Lingxi Skin Manager: ${managerUrl}`);
+  if (IS_WINDOWS && IS_SEA && !process.argv.includes("--background")) {
+    spawn("explorer.exe", [managerUrl], { detached: true, stdio: "ignore" }).unref();
+  }
+});
 
 setInterval(async () => {
   if (polling || !currentTheme.enabled) return;

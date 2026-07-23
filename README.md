@@ -2,7 +2,7 @@
 
 > 每个人的办公助理，当然也可以长得不一样。
 
-[![version](https://img.shields.io/badge/version-v0.7.0-7257e8)](https://github.com/Githun1314/lingxi-skin-manager/releases/latest)
+[![version](https://img.shields.io/badge/version-v0.7.1-7257e8)](https://github.com/Githun1314/lingxi-skin-manager/releases/latest)
 [![platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-111111)](#系统要求)
 [![license](https://img.shields.io/badge/code%20license-MIT-30a46c)](LICENSE)
 
@@ -34,17 +34,16 @@
 
 ## Windows 安装（预览版）
 
-1. 前往 [Releases](https://github.com/Githun1314/lingxi-skin-manager/releases/latest) 下载 `WPS灵犀皮肤管理器-*-Windows-x64.zip`。
-2. 完整解压 ZIP，不要直接在压缩包内运行。
-3. 双击 `Start-Lingxi-Skin-Manager.cmd`，浏览器会自动打开管理页面。
-4. 第一次使用时点击“连接并重新启动灵犀”，再选择并应用皮肤。
+1. 前往 [Releases](https://github.com/Githun1314/lingxi-skin-manager/releases/latest) 下载 `WPS-Lingxi-Skin-Manager-Windows-x64.exe`。
+2. 双击运行，管理页面会自动在默认浏览器中打开。
+3. 第一次使用时点击“连接并重新启动灵犀”，再选择并应用皮肤。
 
-Windows 包不需要手动安装 Node.js；首次启动会从 Node.js 官方站点自动下载运行环境并校验 SHA256，后续不会重复下载。当前为首个 Windows 预览版；详细路径识别与排查方法见 [Windows 使用说明](WINDOWS.md)。
+单文件 EXE 已内置运行环境和皮肤素材，不需要安装 Node.js、解压文件或在首次启动时额外下载运行环境。当前为 Windows 预览版；详细路径识别与排查方法见 [Windows 使用说明](WINDOWS.md)。
 
 ## 系统要求
 
 - macOS 12 及以上，Apple Silicon 已验证。
-- Windows 10/11 x64；已完成便携包、路径发现和启动逻辑的静态验证，等待更多真实客户端反馈。
+- Windows 10/11 x64；已完成单文件构建、路径发现和官方 Windows 客户端云端启动验证，仍建议在真实 Windows 10/11 电脑上继续反馈兼容性。
 - 已安装 WPS 灵犀专业版。
 
 ## 工作方式
