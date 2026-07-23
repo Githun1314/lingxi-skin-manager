@@ -6,16 +6,24 @@ const waitForContent = process.argv.includes("--wait-for-content");
 const openLogin = process.argv.includes("--open-login");
 
 let pages = [];
-const targetDeadline = Date.now() + 90_000;
+let target;
+const targetDeadline = Date.now() + 120_000;
 do {
   const targets = await fetch("http://127.0.0.1:9229/json/list").then(response => response.json());
   pages = targets.filter(target => target.type === "page" && target.webSocketDebuggerUrl);
-  if (pages.length) break;
+  target = pages.find(page =>
+    /^https?:/i.test(page.url || "") &&
+    /lingxi|kdocs|wps/i.test(`${page.url} ${page.title}`)
+  );
+  if (target || (!waitForContent && pages.length)) break;
   await new Promise(resolve => setTimeout(resolve, 1000));
 } while (Date.now() < targetDeadline);
-if (!pages.length) throw new Error("No debuggable Lingxi page appeared within 90 seconds.");
+if (!target && !pages.length) throw new Error("No debuggable Lingxi page appeared within 120 seconds.");
 
-const target = pages.find(page => /lingxi|kdocs|wps/i.test(`${page.url} ${page.title}`)) || pages[0];
+target ||= pages.find(page => /lingxi|kdocs|wps/i.test(`${page.url} ${page.title}`)) || pages[0];
+if (waitForContent && !/^https?:/i.test(target.url || "")) {
+  throw new Error(`Lingxi stayed on its local loading window: ${target.url || "(no URL)"}`);
+}
 console.log(`Capturing target: ${target.title || "(untitled)"} ${target.url}`);
 
 const socket = new WebSocket(target.webSocketDebuggerUrl);
