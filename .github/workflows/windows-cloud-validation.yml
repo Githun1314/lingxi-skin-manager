@@ -1,0 +1,63 @@
+name: Windows cloud validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/windows-cloud-validation.yml"
+      - "lib/**"
+      - "public/**"
+      - "scripts/windows/**"
+      - "server.mjs"
+      - "package.json"
+  pull_request:
+    paths:
+      - ".github/workflows/windows-cloud-validation.yml"
+      - "lib/**"
+      - "public/**"
+      - "scripts/windows/**"
+      - "server.mjs"
+      - "package.json"
+  workflow_dispatch:
+    inputs:
+      install_official_lingxi:
+        description: "Download and silently install the official 1.2.23 client (about 489 MB)"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Smoke test on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2025]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.15.0"
+      - name: Validate JavaScript and Windows path discovery
+        run: npm run check
+      - name: Validate PowerShell launchers and local manager
+        shell: powershell
+        run: ./scripts/windows/ci-smoke.ps1
+
+  official-client:
+    name: Official Lingxi 1.2.23 install probe
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.install_official_lingxi }}
+    runs-on: windows-2025
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.15.0"
+      - name: Verify signature and install the official Windows client
+        shell: powershell
+        run: ./scripts/windows/install-official-lingxi.ps1
