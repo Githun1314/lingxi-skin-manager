@@ -2,11 +2,11 @@
 
 > 每个人的办公助理，当然也可以长得不一样。
 
-[![version](https://img.shields.io/badge/version-v0.6.4-7257e8)](https://github.com/Githun1314/lingxi-skin-manager/releases/latest)
-[![platform](https://img.shields.io/badge/platform-macOS-111111)](#系统要求)
+[![version](https://img.shields.io/badge/version-v0.7.0-7257e8)](https://github.com/Githun1314/lingxi-skin-manager/releases/latest)
+[![platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-111111)](#系统要求)
 [![license](https://img.shields.io/badge/code%20license-MIT-30a46c)](LICENSE)
 
-一个面向 macOS 版 WPS 灵犀的第三方本地皮肤管理器。它支持完整主题、品牌 Logo 与名称、日夜配色、背景画布和随输入框动态定位的 IP 挂件，同时不修改官方应用包。
+一个面向 macOS 与 Windows 版 WPS 灵犀的第三方本地皮肤管理器。它支持完整主题、品牌 Logo 与名称、日夜配色、背景画布和随输入框动态定位的 IP 挂件，同时不修改官方应用包。
 
 ![金小獴探头夜间皮肤](docs/images/mongoose-peek-dark.png)
 
@@ -23,20 +23,29 @@
 
 ![皮肤管理器](docs/images/skin-manager.png)
 
-## 安装
+## macOS 安装
 
-1. 前往 [Releases](https://github.com/Githun1314/lingxi-skin-manager/releases/latest) 下载最新的 `WPS-Lingxi-Skin-Manager-*-macOS.zip`。
+1. 前往 [Releases](https://github.com/Githun1314/lingxi-skin-manager/releases/latest) 下载最新的 `WPS灵犀皮肤管理器-*-macOS.zip`。
 2. 解压后双击 `WPS灵犀皮肤管理器.app`。
 3. 第一次使用时点击“连接并重新启动灵犀”。
 4. 选择主题并点击“应用皮肤”。
 
 系统可能提示该应用来自未识别的开发者。这是因为当前分享包使用本地临时签名，没有申请 Apple Developer 公证。请仅从本仓库 Releases 下载，并在确认来源后运行。
 
+## Windows 安装（预览版）
+
+1. 前往 [Releases](https://github.com/Githun1314/lingxi-skin-manager/releases/latest) 下载 `WPS灵犀皮肤管理器-*-Windows-x64.zip`。
+2. 完整解压 ZIP，不要直接在压缩包内运行。
+3. 双击 `Start-Lingxi-Skin-Manager.cmd`，浏览器会自动打开管理页面。
+4. 第一次使用时点击“连接并重新启动灵犀”，再选择并应用皮肤。
+
+Windows 包已内置运行环境，不需要安装 Node.js。当前为首个 Windows 预览版；详细路径识别与排查方法见 [Windows 使用说明](WINDOWS.md)。
+
 ## 系统要求
 
-- macOS，Apple Silicon 已验证。
+- macOS 12 及以上，Apple Silicon 已验证。
+- Windows 10/11 x64；已完成便携包、路径发现和启动逻辑的静态验证，等待更多真实客户端反馈。
 - 已安装 WPS 灵犀专业版。
-- 当前仅测试 macOS；Windows 尚未适配。
 
 ## 工作方式
 
@@ -45,7 +54,8 @@
 主题配置保存在：
 
 ```text
-~/Library/Application Support/Lingxi Skin Manager/theme.json
+macOS:   ~/Library/Application Support/Lingxi Skin Manager/theme.json
+Windows: %APPDATA%\Lingxi Skin Manager\theme.json
 ```
 
 如果灵犀后续大幅调整在线界面结构，部分样式选择器可能需要跟随更新。
@@ -57,10 +67,11 @@ npm run check
 npm start
 ```
 
-打开 `http://localhost:17363`。构建 macOS 分享包：
+打开 `http://localhost:17363`。构建分享包：
 
 ```bash
 ./scripts/build-macos.sh
+./scripts/build-windows.sh
 ```
 
 ## 主题设计说明

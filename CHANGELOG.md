@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented here.
 
+## [0.7.0] - 2026-07-23
+
+- Added a standalone Windows x64 preview package with an embedded Node.js runtime.
+- Added automatic discovery for common WPS Lingxi Windows installation paths.
+- Added Windows-specific process restart and connection handling.
+- Added personalized Windows desktop and Start menu shortcuts with generated icons.
+- Added platform-aware interface copy and Windows installation documentation.
+
 ## [0.6.4] - 2026-07-23
 
 - Removed the native outline underneath the conversation area's rounded corner.
