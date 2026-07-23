@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here.
 
+## [0.8.2] - 2026-07-23
+
+- Recalibrated 金小獴探头 around its intended neck anchor: the head stays above the composer while the scarf and long forearms naturally overlap the input area.
+- Kept the shallower hand-edge alignment used by the other hanger themes unchanged.
+
 ## [0.8.1] - 2026-07-23
 
 - Calibrated five hanger assets so hands and forearms sit flush against the real composer edge without sinking into the input area, including a shallower dedicated setting for the long-armed peeking mongoose.
