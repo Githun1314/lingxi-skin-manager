@@ -6,11 +6,11 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v0.8.1
+        default: v0.8.2
       title:
         description: Release title
         required: true
-        default: v0.8.1 · 趴边贴合与预览卡片优化
+        default: v0.8.2 · 金小獴探头姿势校准
       base_mac_tag:
         description: Stable macOS application shell release
         required: true
