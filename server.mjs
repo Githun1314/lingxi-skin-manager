@@ -984,7 +984,8 @@ async function serveStatic(response, url) {
     const data = IS_SEA ? Buffer.from(getAsset(assetKey)) : await fs.readFile(file);
     response.writeHead(200, { "Content-Type": MIME[path.extname(file)] || "application/octet-stream", "Cache-Control": "no-cache" });
     response.end(data);
-  } catch {
+  } catch (error) {
+    if (IS_SEA) console.error(`Embedded asset failed: public/${normalized.replaceAll("\\", "/")} (${error.message})`);
     response.writeHead(404); response.end("Not found");
   }
 }
