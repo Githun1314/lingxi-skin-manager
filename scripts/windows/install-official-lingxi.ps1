@@ -22,25 +22,54 @@ $sha256 = (Get-FileHash -Algorithm SHA256 $installer).Hash.ToLowerInvariant()
 Write-Host "Installer SHA256: $sha256"
 
 Write-Host "Trying the installer's standard silent-install switch..."
-$install = Start-Process -FilePath $installer -ArgumentList @("/S") -Wait -PassThru
+$installRoot = Join-Path $env:RUNNER_TEMP "LingxiInstall"
+New-Item -ItemType Directory -Path $installRoot -Force | Out-Null
+$installStartedAt = Get-Date
+$install = Start-Process -FilePath $installer -ArgumentList @("/S", "/D=$installRoot") -PassThru
+if (-not $install.WaitForExit(600000)) {
+  Stop-Process -Id $install.Id -Force -ErrorAction SilentlyContinue
+  throw "The official installer did not finish within 10 minutes."
+}
 if ($install.ExitCode -ne 0) { throw "Installer exited with code $($install.ExitCode)." }
+Start-Sleep -Seconds 8
 
 $searchRoots = @(
+  $installRoot,
   $env:LOCALAPPDATA,
+  $env:APPDATA,
   $env:ProgramFiles,
-  ${env:ProgramFiles(x86)}
+  ${env:ProgramFiles(x86)},
+  $env:ProgramData
 ) | Where-Object { $_ -and (Test-Path $_) }
 
 $names = @("wpslingxi.exe", "WPS Lingxi.exe", "lingxi.exe", "lingxi-desktop.exe")
-$matches = foreach ($root in $searchRoots) {
+$candidates = foreach ($root in $searchRoots) {
   Get-ChildItem -Path $root -File -Recurse -ErrorAction SilentlyContinue |
-    Where-Object { $names -contains $_.Name }
+    Where-Object { $_.Extension -eq ".exe" }
 }
 
-$matches = @($matches | Sort-Object LastWriteTime -Descending)
-if ($matches.Count -eq 0) { throw "Silent installation completed, but no Lingxi executable was found." }
+$matches = @($candidates | Where-Object {
+  $names -contains $_.Name -or
+  $_.VersionInfo.ProductName -match "Lingxi|灵犀" -or
+  $_.VersionInfo.FileDescription -match "Lingxi|灵犀" -or
+  ($_.LastWriteTime -ge $installStartedAt -and $_.VersionInfo.CompanyName -match "Kingsoft|金山")
+} | Sort-Object @{ Expression = { $_.FullName.StartsWith($installRoot) }; Descending = $true }, Length -Descending)
 
-$matches | Select-Object FullName, Length, LastWriteTime | Format-Table -AutoSize
+if ($matches.Count -eq 0) {
+  Write-Host "Recently created executables for installation diagnostics:"
+  $candidates |
+    Where-Object { $_.LastWriteTime -ge $installStartedAt } |
+    Select-Object -First 80 FullName, Length, LastWriteTime,
+      @{ Name = "Product"; Expression = { $_.VersionInfo.ProductName } },
+      @{ Name = "Company"; Expression = { $_.VersionInfo.CompanyName } } |
+    Format-Table -AutoSize
+  throw "Silent installation completed, but no Lingxi executable was found."
+}
+
+$matches | Select-Object FullName, Length, LastWriteTime,
+  @{ Name = "Product"; Expression = { $_.VersionInfo.ProductName } },
+  @{ Name = "Company"; Expression = { $_.VersionInfo.CompanyName } } |
+  Format-Table -AutoSize
 $detected = $matches[0].FullName
 $env:LINGXI_APP_PATH = $detected
 
