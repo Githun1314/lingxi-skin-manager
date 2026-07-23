@@ -1,0 +1,77 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/windows-exe.yml"
+      - "lib/**"
+      - "public/**"
+      - "scripts/build-windows-exe.mjs"
+      - "server.mjs"
+      - "package.json"
+      - "package-lock.json"
+  pull_request:
+    paths:
+      - ".github/workflows/windows-exe.yml"
+      - "lib/**"
+      - "public/**"
+      - "scripts/build-windows-exe.mjs"
+      - "server.mjs"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "26.5.0"
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - name: Build the single-file Windows application
+        run: npm run build:windows:exe
+      - name: Smoke-test the executable and embedded interface
+        shell: powershell
+        run: |
+          $exe = Join-Path $PWD "dist\WPS-Lingxi-Skin-Manager-Windows-x64.exe"
+          $process = Start-Process -FilePath $exe -ArgumentList "--background" -PassThru
+          try {
+            $ready = $false
+            for ($index = 0; $index -lt 80; $index++) {
+              try {
+                $status = Invoke-RestMethod -Uri "http://127.0.0.1:17363/api/status" -TimeoutSec 1
+                $page = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:17363/" -TimeoutSec 2
+                if ($status.platform -eq "win32" -and $page.Content -match "灵犀") {
+                  $ready = $true
+                  break
+                }
+              } catch {}
+              Start-Sleep -Milliseconds 250
+            }
+            if (-not $ready) { throw "The packaged manager did not serve its embedded interface." }
+          } finally {
+            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+          }
+      - name: Write SHA256 checksum
+        shell: powershell
+        run: |
+          $exe = "dist\WPS-Lingxi-Skin-Manager-Windows-x64.exe"
+          $hash = (Get-FileHash -Algorithm SHA256 $exe).Hash.ToLowerInvariant()
+          "$hash  WPS-Lingxi-Skin-Manager-Windows-x64.exe" |
+            Set-Content -Encoding ascii "dist\WPS-Lingxi-Skin-Manager-Windows-x64.exe.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WPS-Lingxi-Skin-Manager-Windows-x64
+          path: |
+            dist/WPS-Lingxi-Skin-Manager-Windows-x64.exe
+            dist/WPS-Lingxi-Skin-Manager-Windows-x64.exe.sha256
+          if-no-files-found: error
