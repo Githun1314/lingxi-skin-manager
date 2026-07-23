@@ -42,17 +42,20 @@ $searchRoots = @(
   $env:ProgramData
 ) | Where-Object { $_ -and (Test-Path $_) }
 
-$names = @("wpslingxi.exe", "WPS Lingxi.exe", "lingxi.exe", "lingxi-desktop.exe")
+$names = @("wpslingxi.exe", "WPS Lingxi.exe", "WPS 灵犀.exe", "WPS灵犀.exe", "lingxi.exe", "lingxi-desktop.exe")
 $candidates = foreach ($root in $searchRoots) {
   Get-ChildItem -Path $root -File -Recurse -ErrorAction SilentlyContinue |
     Where-Object { $_.Extension -eq ".exe" }
 }
 
 $matches = @($candidates | Where-Object {
-  $names -contains $_.Name -or
-  $_.VersionInfo.ProductName -match "Lingxi|灵犀" -or
-  $_.VersionInfo.FileDescription -match "Lingxi|灵犀" -or
-  ($_.LastWriteTime -ge $installStartedAt -and $_.VersionInfo.CompanyName -match "Kingsoft|金山")
+  $_.Name -notmatch "uninstall|installer|updater" -and (
+    $names -contains $_.Name -or
+    $_.Name -match "Lingxi|灵犀" -or
+    $_.VersionInfo.ProductName -match "Lingxi|灵犀" -or
+    $_.VersionInfo.FileDescription -match "Lingxi|灵犀" -or
+    ($_.LastWriteTime -ge $installStartedAt -and $_.VersionInfo.CompanyName -match "Kingsoft|金山")
+  )
 } | Sort-Object @{ Expression = { $_.FullName.StartsWith($installRoot) }; Descending = $true }, Length -Descending)
 
 if ($matches.Count -eq 0) {
@@ -81,6 +84,8 @@ Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
   ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 
 Write-Host "Launching the official client with the same local debugging arguments used by the manager..."
+$keepAliveForLogin = $env:WAIT_FOR_LOGIN -eq "true"
+$manager = $null
 $client = Start-Process -FilePath $detected -ArgumentList @(
   "--remote-debugging-port=9229",
   "--remote-debugging-address=127.0.0.1"
@@ -89,7 +94,6 @@ $client = Start-Process -FilePath $detected -ArgumentList @(
 try {
   $debugVersion = $null
   for ($index = 0; $index -lt 120; $index++) {
-    if ($client.HasExited) { throw "The official client exited during its launch probe with code $($client.ExitCode)." }
     try {
       $debugVersion = Invoke-RestMethod -Uri "http://127.0.0.1:9229/json/version" -TimeoutSec 1
       break
@@ -133,7 +137,8 @@ try {
     Write-Host "Theme applied to a matching page: $($applyResult.applied)"
     Start-Sleep -Seconds 4
 
-    node (Join-Path $repoRoot "scripts\capture-cdp-screenshot.mjs") (Join-Path $env:RUNNER_TEMP "lingxi-windows-client.png")
+    $clientPng = Join-Path $env:RUNNER_TEMP "lingxi-windows-login-client.png"
+    node (Join-Path $repoRoot "scripts\capture-cdp-screenshot.mjs") $clientPng
 
     Add-Type -AssemblyName System.Windows.Forms
     Add-Type -AssemblyName System.Drawing
@@ -142,18 +147,25 @@ try {
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     try {
       $graphics.CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size)
-      $bitmap.Save((Join-Path $env:RUNNER_TEMP "lingxi-windows-desktop.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+      $desktopPng = Join-Path $env:RUNNER_TEMP "lingxi-windows-login-desktop.png"
+      $bitmap.Save($desktopPng, [System.Drawing.Imaging.ImageFormat]::Png)
     } finally {
       $graphics.Dispose()
       $bitmap.Dispose()
     }
+    if ($env:WINDOWS_SCREENSHOT_KEY) {
+      & (Join-Path $PSScriptRoot "protect-screenshot.ps1") -InputPath $clientPng -OutputPath "$clientPng.enc"
+      & (Join-Path $PSScriptRoot "protect-screenshot.ps1") -InputPath $desktopPng -OutputPath "$desktopPng.enc"
+    }
   } finally {
-    if ($manager -and -not $manager.HasExited) { Stop-Process -Id $manager.Id -Force }
+    if (-not $keepAliveForLogin -and $manager -and -not $manager.HasExited) { Stop-Process -Id $manager.Id -Force }
   }
 } finally {
-  Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
-    Where-Object { $_.ExecutablePath -eq $detected } |
-    ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+  if (-not $keepAliveForLogin) {
+    Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+      Where-Object { $_.ExecutablePath -eq $detected } |
+      ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+  }
 }
 
 Write-Host "Official Lingxi install and launch probe passed. Detected: $detected"
