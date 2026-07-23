@@ -25,7 +25,7 @@ for ($index = 0; $index -lt 120; $index++) {
     $pageJson = node (Join-Path $repoRoot "scripts\inspect-cdp-page.mjs")
     $page = $pageJson | ConvertFrom-Json
     $looksLoggedIn = $page.text -match "新会话|技能|定时任务|历史会话|今天可以帮你"
-    $looksLikeLogin = $page.text -match "扫码登录|登录 WPS|账号登录|手机号登录|微信登录"
+    $looksLikeLogin = $page.hasLoginButton -or $page.text -match "扫码登录|登录 WPS|账号登录|手机号登录|微信登录"
     if ($looksLoggedIn -and -not $looksLikeLogin) {
       $result = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:17363/api/theme" -ContentType "application/json" -Body $theme
       if ($result.applied) {

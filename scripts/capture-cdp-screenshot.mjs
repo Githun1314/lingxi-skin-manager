@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 const outputPath = process.argv[2];
 if (!outputPath) throw new Error("Usage: node capture-cdp-screenshot.mjs <output.png>");
 const waitForContent = process.argv.includes("--wait-for-content");
+const openLogin = process.argv.includes("--open-login");
 
 let pages = [];
 const targetDeadline = Date.now() + 90_000;
@@ -76,6 +77,45 @@ try {
       throw new Error(`Lingxi did not render meaningful page content within 90 seconds: ${JSON.stringify(state)}`);
     }
     console.log(`Rendered page ready: ${JSON.stringify(state)}`);
+  }
+  if (openLogin) {
+    const clicked = await send("Runtime.evaluate", {
+      expression: `(() => {
+        const elements = [...document.querySelectorAll("button, a, [role=button], div")];
+        const login = elements.find(element => {
+          const rect = element.getBoundingClientRect();
+          return element.textContent?.trim() === "登录" && rect.width > 20 && rect.height > 15;
+        });
+        if (!login) return false;
+        login.click();
+        return true;
+      })()`,
+      returnByValue: true
+    });
+    if (!clicked.result?.value) throw new Error("The visible Lingxi login button was not found.");
+
+    const loginDeadline = Date.now() + 60_000;
+    let loginState;
+    do {
+      const evaluated = await send("Runtime.evaluate", {
+        expression: `JSON.stringify({
+          text: (document.body?.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 4000),
+          visibleImages: [...document.images].filter(image => {
+            const rect = image.getBoundingClientRect();
+            return rect.width >= 120 && rect.height >= 120;
+          }).length,
+          visibleCanvases: [...document.querySelectorAll("canvas")].filter(canvas => {
+            const rect = canvas.getBoundingClientRect();
+            return rect.width >= 120 && rect.height >= 120;
+          }).length
+        })`,
+        returnByValue: true
+      });
+      loginState = JSON.parse(evaluated.result?.value || "{}");
+      if (/扫码|二维码|微信登录|账号登录|手机号登录/.test(loginState.text || "") || loginState.visibleCanvases > 0) break;
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } while (Date.now() < loginDeadline);
+    console.log(`Login panel ready: ${JSON.stringify(loginState)}`);
   }
   await new Promise(resolve => setTimeout(resolve, 1500));
   const { data } = await send("Page.captureScreenshot", {

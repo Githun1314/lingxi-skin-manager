@@ -99,6 +99,8 @@ Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
 Write-Host "Launching the official client with the same local debugging arguments used by the manager..."
 $keepAliveForLogin = $env:WAIT_FOR_LOGIN -eq "true"
 $manager = $null
+$runnerTrackingId = $env:RUNNER_TRACKING_ID
+if ($keepAliveForLogin) { $env:RUNNER_TRACKING_ID = "" }
 $client = Start-Process -FilePath $detected -ArgumentList @(
   "--remote-debugging-port=9229",
   "--remote-debugging-address=127.0.0.1"
@@ -151,7 +153,7 @@ try {
     Start-Sleep -Seconds 4
 
     $clientRaw = Join-Path $env:RUNNER_TEMP "lingxi-windows-login-client.raw"
-    node (Join-Path $repoRoot "scripts\capture-cdp-screenshot.mjs") $clientRaw --wait-for-content
+    node (Join-Path $repoRoot "scripts\capture-cdp-screenshot.mjs") $clientRaw --wait-for-content --open-login
     if ($LASTEXITCODE -ne 0) { throw "Capturing the rendered Lingxi login page failed." }
 
     Add-Type -AssemblyName System.Windows.Forms
@@ -175,6 +177,7 @@ try {
     if (-not $keepAliveForLogin -and $manager -and -not $manager.HasExited) { Stop-Process -Id $manager.Id -Force }
   }
 } finally {
+  $env:RUNNER_TRACKING_ID = $runnerTrackingId
   if (-not $keepAliveForLogin) {
     Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
       Where-Object { $_.ExecutablePath -eq $detected } |

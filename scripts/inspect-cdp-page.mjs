@@ -35,6 +35,10 @@ try {
       url: location.href,
       readyState: document.readyState,
       text: (document.body?.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 4000),
+      hasLoginButton: [...document.querySelectorAll("button, a, [role=button], div")].some(element => {
+        const rect = element.getBoundingClientRect();
+        return element.textContent?.trim() === "登录" && rect.width > 20 && rect.height > 15;
+      }),
       htmlLength: (document.body?.innerHTML || "").length
     })`,
     returnByValue: true
