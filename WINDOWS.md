@@ -17,22 +17,24 @@
 
 ## 灵犀路径识别
 
-管理器会在以下位置自动寻找 `wpslingxi.exe`：
+管理器只会自动寻找 **WPS 灵犀独立客户端**，不会连接 WPS Office 安装目录里的 `wpslingxi.exe` 内置插件。常见的独立客户端程序名为 `WPS 灵犀.exe`，自动识别范围包括：
 
-- `%LOCALAPPDATA%\Kingsoft\WPS Office\<版本号>\office6\wpslingxi.exe`
-- `%ProgramFiles%\Kingsoft\WPS Office\<版本号>\office6\wpslingxi.exe`
-- `%ProgramFiles(x86)%\Kingsoft\WPS Office\<版本号>\office6\wpslingxi.exe`
+- `%LOCALAPPDATA%\Kingsoft\WPS Lingxi\`
+- `%ProgramFiles%\Kingsoft\WPS Lingxi\`
+- `%LOCALAPPDATA%\Kingsoft\WPS 灵犀\`
+- `%ProgramFiles%\Kingsoft\WPS 灵犀\`
 - `%LOCALAPPDATA%\Programs\Lingxi\`
 - `%LOCALAPPDATA%\Programs\lingxi-desktop\`
-- 常见的 WPS Lingxi 独立安装目录
 
-如果 WPS 安装在其他磁盘或自定义目录，可以先在命令提示符中设置：
+如果独立客户端安装在其他磁盘或自定义目录，可以先在命令提示符中设置：
 
 ```bat
-setx LINGXI_APP_PATH "D:\你的安装目录\灵犀主程序.exe"
+setx LINGXI_APP_PATH "D:\你的安装目录\WPS 灵犀.exe"
 ```
 
 重新打开皮肤管理器后生效。
+
+如果这里指向 `wpslingxi.exe`，管理器会明确拒绝启动并提示重新选择，避免误把 WPS Office 内置插件当成独立客户端。
 
 ## 个性化应用入口
 
@@ -46,11 +48,11 @@ setx LINGXI_APP_PATH "D:\你的安装目录\灵犀主程序.exe"
 
 ## 当前验证状态
 
-v0.7.0 已完成以下检查：
+v0.7.2 已完成以下检查：
 
-- Windows 包结构、首次运行下载和固定 SHA256 校验检查；
+- Windows 单文件 EXE 启动和内置界面检查；
 - Windows PowerShell 启动脚本语法检查；
-- 安装路径发现、进程管理和快捷方式逻辑审查；
+- 独立客户端路径发现、Office 插件拒绝、进程管理和快捷方式逻辑检查；
 - macOS 原有能力回归检查。
 
-由于当前开发环境是 macOS，Windows 灵犀客户端上的最终连接、启动页和界面选择器仍标记为预览状态。提交问题时请附上 Windows 版本、WPS 灵犀版本及隐藏个人内容后的截图。
+已通过 Windows 云端环境安装并启动官方 WPS 灵犀独立客户端验证目标识别；主题在真实账号界面上的最终显示仍建议继续收集 Windows 10/11 反馈。提交问题时请附上 Windows 版本、WPS 灵犀版本及隐藏个人内容后的截图。

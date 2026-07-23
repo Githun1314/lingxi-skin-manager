@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here.
 
+## [0.7.2] - 2026-07-23
+
+- Fixed Windows discovery so it targets only the standalone WPS Lingxi desktop client.
+- Removed WPS Office plugin directories and `wpslingxi.exe` from automatic discovery.
+- Added an explicit rejection message when `LINGXI_APP_PATH` points to the Office plugin.
+- Updated Windows tests and distribution guidance to distinguish the standalone client from the Office plugin.
+
 ## [0.7.1] - 2026-07-23
 
 - Added a self-contained Windows x64 EXE with the runtime and all theme assets embedded.
