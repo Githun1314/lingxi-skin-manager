@@ -15,7 +15,7 @@ foreach ($target in $parseTargets) {
   }
 }
 
-$fakeLingxi = Join-Path $env:RUNNER_TEMP "fake-lingxi\wpslingxi.exe"
+$fakeLingxi = Join-Path $env:RUNNER_TEMP "fake-lingxi\WPS 灵犀.exe"
 New-Item -ItemType Directory -Path (Split-Path -Parent $fakeLingxi) -Force | Out-Null
 Copy-Item (Get-Command node.exe).Source $fakeLingxi -Force
 $env:LINGXI_APP_PATH = $fakeLingxi

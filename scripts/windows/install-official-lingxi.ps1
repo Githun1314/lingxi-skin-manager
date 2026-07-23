@@ -47,13 +47,16 @@ $searchRoots = @(
   $env:ProgramData
 ) | Where-Object { $_ -and (Test-Path $_) }
 
-$names = @("wpslingxi.exe", "WPS Lingxi.exe", "WPS 灵犀.exe", "WPS灵犀.exe", "lingxi.exe", "lingxi-desktop.exe")
+$names = @("WPS Lingxi.exe", "WPS 灵犀.exe", "WPS灵犀.exe", "lingxi.exe", "lingxi-desktop.exe")
 $candidates = foreach ($root in $searchRoots) {
   Get-ChildItem -Path $root -File -Recurse -ErrorAction SilentlyContinue |
     Where-Object { $_.Extension -eq ".exe" }
 }
 
 $matches = @($candidates | Where-Object {
+  $_.Name -ne "wpslingxi.exe" -and
+  $_.FullName -notmatch "[\\/]WPS Office[\\/]" -and
+  $_.FullName -notmatch "[\\/]office6[\\/]" -and
   $_.Name -notmatch "uninstall|installer|updater" -and (
     $_.FullName.StartsWith($installRoot) -or
     $names -contains $_.Name -or
