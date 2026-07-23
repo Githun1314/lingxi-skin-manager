@@ -5,6 +5,7 @@ import os from "node:os";
 import { spawn, execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { pathToFileURL } from "node:url";
+import { fileExists, findWindowsLingxiExecutable } from "./lib/windows-platform.mjs";
 
 const execFileAsync = promisify(execFile);
 const HOST = "127.0.0.1";
@@ -639,57 +640,6 @@ async function restoreConnectedPages() {
   lastInjectionAt = null;
   lastError = "";
   return pages.length;
-}
-
-async function fileExists(file) {
-  try { await fs.access(file); return true; }
-  catch { return false; }
-}
-
-function compareVersionNames(left, right) {
-  const a = left.split(/[^0-9]+/).filter(Boolean).map(Number);
-  const b = right.split(/[^0-9]+/).filter(Boolean).map(Number);
-  for (let index = 0; index < Math.max(a.length, b.length); index += 1) {
-    const difference = (b[index] || 0) - (a[index] || 0);
-    if (difference) return difference;
-  }
-  return right.localeCompare(left);
-}
-
-async function findWindowsLingxiExecutable() {
-  const explicit = process.env.LINGXI_APP_PATH;
-  if (explicit && await fileExists(explicit)) return explicit;
-
-  const roots = [
-    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, "Kingsoft", "WPS Office"),
-    process.env.ProgramFiles && path.join(process.env.ProgramFiles, "Kingsoft", "WPS Office"),
-    process.env["ProgramFiles(x86)"] && path.join(process.env["ProgramFiles(x86)"], "Kingsoft", "WPS Office"),
-    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, "Kingsoft", "WPS Lingxi"),
-    process.env.ProgramFiles && path.join(process.env.ProgramFiles, "Kingsoft", "WPS Lingxi")
-  ].filter(Boolean);
-
-  for (const root of [...new Set(roots)]) {
-    const directCandidates = [
-      path.join(root, "office6", "wpslingxi.exe"),
-      path.join(root, "wpslingxi.exe"),
-      path.join(root, "WPS Lingxi.exe")
-    ];
-    for (const candidate of directCandidates) if (await fileExists(candidate)) return candidate;
-
-    try {
-      const entries = (await fs.readdir(root, { withFileTypes: true }))
-        .filter(entry => entry.isDirectory())
-        .sort((a, b) => compareVersionNames(a.name, b.name));
-      for (const entry of entries) {
-        for (const relative of [path.join("office6", "wpslingxi.exe"), "wpslingxi.exe", "WPS Lingxi.exe"]) {
-          const candidate = path.join(root, entry.name, relative);
-          if (await fileExists(candidate)) return candidate;
-        }
-      }
-    } catch {}
-  }
-
-  throw new Error("未找到 WPS 灵犀。请先安装 Windows 版灵犀，或设置 LINGXI_APP_PATH 指向 wpslingxi.exe");
 }
 
 async function findLingxiExecutable() {
