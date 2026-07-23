@@ -45,18 +45,20 @@ jobs:
           $exe = Join-Path $PWD "dist\WPS-Lingxi-Skin-Manager-Windows-x64.exe"
           $stdout = Join-Path $env:RUNNER_TEMP "manager-stdout.log"
           $stderr = Join-Path $env:RUNNER_TEMP "manager-stderr.log"
+          $statusFile = Join-Path $env:RUNNER_TEMP "manager-status.json"
+          $pageFile = Join-Path $env:RUNNER_TEMP "manager-index.html"
           $process = Start-Process -FilePath $exe -ArgumentList "--background" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
           try {
             $ready = $false
             for ($index = 0; $index -lt 80; $index++) {
-              try {
-                $status = Invoke-RestMethod -Uri "http://127.0.0.1:17363/api/status" -TimeoutSec 1
-                $page = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:17363/" -TimeoutSec 2
-                if ($status.running -and $page.StatusCode -eq 200 -and $page.RawContentLength -gt 1000) {
-                  $ready = $true
-                  break
-                }
-              } catch {}
+              & curl.exe --fail --silent --show-error --output $statusFile "http://127.0.0.1:17363/api/status" 2>$null
+              $statusExit = $LASTEXITCODE
+              & curl.exe --fail --silent --show-error --output $pageFile "http://127.0.0.1:17363/" 2>$null
+              $pageExit = $LASTEXITCODE
+              if ($statusExit -eq 0 -and $pageExit -eq 0 -and (Get-Item $statusFile).Length -gt 20 -and (Get-Item $pageFile).Length -gt 1000) {
+                $ready = $true
+                break
+              }
               if ($process.HasExited) { break }
               Start-Sleep -Milliseconds 250
             }
@@ -65,6 +67,10 @@ jobs:
               if (Test-Path $stdout) { Get-Content $stdout }
               Write-Host "--- executable stderr ---"
               if (Test-Path $stderr) { Get-Content $stderr }
+              Write-Host "--- status response ---"
+              if (Test-Path $statusFile) { Get-Content $statusFile }
+              Write-Host "--- page bytes ---"
+              if (Test-Path $pageFile) { (Get-Item $pageFile).Length }
               throw "The packaged manager did not serve its embedded interface."
             }
           } finally {
