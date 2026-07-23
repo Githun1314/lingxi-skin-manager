@@ -25,6 +25,11 @@ on:
         required: true
         default: false
         type: boolean
+      wait_for_login:
+        description: "Keep the cloud client online for 10 minutes so the owner can scan the QR code"
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -60,11 +65,27 @@ jobs:
           node-version: "24.15.0"
       - name: Verify signature and install the official Windows client
         shell: powershell
+        env:
+          WAIT_FOR_LOGIN: ${{ inputs.wait_for_login }}
+          WINDOWS_SCREENSHOT_KEY: ${{ secrets.WINDOWS_SCREENSHOT_KEY }}
         run: ./scripts/windows/install-official-lingxi.ps1
-      - name: Upload Windows client screenshots
+      - name: Upload encrypted login screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lingxi-windows-client-screenshots
-          path: ${{ runner.temp }}/lingxi-windows-*.png
+          name: lingxi-windows-login-screenshots
+          path: ${{ runner.temp }}/lingxi-windows-login-*.png*
+          if-no-files-found: warn
+      - name: Wait for QR login and apply the theme
+        if: ${{ inputs.wait_for_login }}
+        shell: powershell
+        env:
+          WINDOWS_SCREENSHOT_KEY: ${{ secrets.WINDOWS_SCREENSHOT_KEY }}
+        run: ./scripts/windows/wait-for-login.ps1
+      - name: Upload encrypted themed screenshots
+        if: always() && inputs.wait_for_login
+        uses: actions/upload-artifact@v4
+        with:
+          name: lingxi-windows-themed-screenshots
+          path: ${{ runner.temp }}/lingxi-windows-themed-*.png*
           if-no-files-found: warn
