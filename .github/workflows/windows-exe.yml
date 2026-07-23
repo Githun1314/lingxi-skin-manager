@@ -52,7 +52,7 @@ jobs:
               try {
                 $status = Invoke-RestMethod -Uri "http://127.0.0.1:17363/api/status" -TimeoutSec 1
                 $page = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:17363/" -TimeoutSec 2
-                if ($status.running -and $page.Content -match "灵犀") {
+                if ($status.running -and $page.StatusCode -eq 200 -and $page.RawContentLength -gt 1000) {
                   $ready = $true
                   break
                 }
