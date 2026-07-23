@@ -5,16 +5,23 @@ import os from "node:os";
 import { spawn, execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { pathToFileURL } from "node:url";
+import { isSea, getAsset } from "node:sea";
+import { fileExists, findWindowsLingxiExecutable } from "./lib/windows-platform.mjs";
 
 const execFileAsync = promisify(execFile);
 const HOST = "127.0.0.1";
 const PORT = 17363;
 const DEBUG_PORT = 9229;
-const IS_MACOS = process.platform === "darwin";
+const PLATFORM = process.platform;
+const IS_MACOS = PLATFORM === "darwin";
+const IS_WINDOWS = PLATFORM === "win32";
+const IS_SEA = isSea();
 const MAC_APP_PATH = "/Applications/WPS 灵犀.app";
 const MAC_APP_EXECUTABLE = `${MAC_APP_PATH}/Contents/MacOS/WPS 灵犀`;
 const PUBLIC_DIR = path.join(import.meta.dirname, "public");
-const DATA_DIR = path.join(os.homedir(), "Library", "Application Support", "Lingxi Skin Manager");
+const DATA_DIR = IS_WINDOWS
+  ? path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "Lingxi Skin Manager")
+  : path.join(os.homedir(), "Library", "Application Support", "Lingxi Skin Manager");
 const THEME_FILE = path.join(DATA_DIR, "theme.json");
 const MAX_BODY = 8 * 1024 * 1024;
 let cachedLingxiExecutable = null;
@@ -638,24 +645,29 @@ async function restoreConnectedPages() {
 }
 
 async function findLingxiExecutable() {
-  if (!IS_MACOS) throw new Error("目前仅支持 macOS");
-  if (cachedLingxiExecutable) {
-    try {
-      await fs.access(cachedLingxiExecutable);
-      return cachedLingxiExecutable;
-    } catch {}
+  if (cachedLingxiExecutable && await fileExists(cachedLingxiExecutable)) return cachedLingxiExecutable;
+  if (IS_MACOS) {
+    if (!await fileExists(MAC_APP_EXECUTABLE)) throw new Error("未找到 /Applications/WPS 灵犀.app");
+    cachedLingxiExecutable = MAC_APP_EXECUTABLE;
+    return cachedLingxiExecutable;
   }
-  try {
-    await fs.access(MAC_APP_EXECUTABLE);
-  } catch {
-    throw new Error("未找到 /Applications/WPS 灵犀.app");
+  if (IS_WINDOWS) {
+    cachedLingxiExecutable = await findWindowsLingxiExecutable();
+    return cachedLingxiExecutable;
   }
-  cachedLingxiExecutable = MAC_APP_EXECUTABLE;
-  return cachedLingxiExecutable;
+  throw new Error(`暂不支持当前系统：${PLATFORM}`);
 }
 
 async function isLingxiRunning() {
   try {
+    if (IS_WINDOWS) {
+      const imageName = path.basename(await findLingxiExecutable());
+      const { stdout } = await execFileAsync("tasklist.exe", ["/FI", `IMAGENAME eq ${imageName}`, "/FO", "CSV", "/NH"], { windowsHide: true });
+      // tasklist uses the active Windows code page, so Chinese image names can
+      // decode incorrectly as UTF-8. A matching CSV row always starts with a
+      // quote, while the localized "no tasks" message does not.
+      return stdout.trimStart().startsWith("\"");
+    }
     const executable = await findLingxiExecutable();
     const { stdout } = await execFileAsync("/usr/bin/pgrep", ["-f", `^${executable.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`]);
     return stdout.trim().length > 0;
@@ -675,19 +687,32 @@ async function isConnected() {
 
 async function restartLingxi() {
   const executable = await findLingxiExecutable();
-  try {
-    const { stdout } = await execFileAsync("/usr/bin/pgrep", ["-f", `^${executable.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`]);
-    for (const pid of stdout.trim().split(/\s+/).filter(Boolean)) process.kill(Number(pid), "SIGTERM");
-  } catch {}
+  const windowsImageName = IS_WINDOWS ? path.basename(executable) : "";
+  if (IS_WINDOWS) {
+    try { await execFileAsync("taskkill.exe", ["/IM", windowsImageName, "/T"], { windowsHide: true }); } catch {}
+  } else {
+    try {
+      const { stdout } = await execFileAsync("/usr/bin/pgrep", ["-f", `^${executable.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`]);
+      for (const pid of stdout.trim().split(/\s+/).filter(Boolean)) process.kill(Number(pid), "SIGTERM");
+    } catch {}
+  }
 
   const stopDeadline = Date.now() + 9000;
   while (Date.now() < stopDeadline && await isLingxiRunning()) await new Promise(resolve => setTimeout(resolve, 300));
+
+  if (IS_WINDOWS && await isLingxiRunning()) {
+    try { await execFileAsync("taskkill.exe", ["/IM", windowsImageName, "/T", "/F"], { windowsHide: true }); } catch {}
+    const forceDeadline = Date.now() + 3000;
+    while (Date.now() < forceDeadline && await isLingxiRunning()) await new Promise(resolve => setTimeout(resolve, 200));
+  }
 
   if (await isLingxiRunning()) {
     throw new Error("灵犀未能正常关闭，请先手动退出灵犀，再点击连接");
   }
 
-  const child = spawn("/usr/bin/open", ["-na", MAC_APP_PATH, "--args", `--remote-debugging-port=${DEBUG_PORT}`, `--remote-debugging-address=${HOST}`], { detached: true, stdio: "ignore" });
+  const child = IS_WINDOWS
+    ? spawn(executable, [`--remote-debugging-port=${DEBUG_PORT}`, `--remote-debugging-address=${HOST}`], { detached: true, stdio: "ignore", windowsHide: false })
+    : spawn("/usr/bin/open", ["-na", MAC_APP_PATH, "--args", `--remote-debugging-port=${DEBUG_PORT}`, `--remote-debugging-address=${HOST}`], { detached: true, stdio: "ignore" });
   child.unref();
 
   const deadline = Date.now() + 20000;
@@ -710,7 +735,7 @@ function xmlEscape(value) {
 
 function safeAppName(value) {
   const normalized = value.replace(/[<>:"/\\|?*\0]/g, " ").replace(/^\.+/, "").replace(/[. ]+$/, "").replace(/\s+/g, " ").trim().slice(0, 24);
-  return normalized || "我的灵犀";
+  return /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(normalized) || !normalized ? "我的灵犀" : normalized;
 }
 
 async function createMacPersonalLauncher() {
@@ -781,15 +806,81 @@ fi
   return { appPath, appName, locationLabel: "Finder 的个人应用目录" };
 }
 
+function powerShellQuote(value) {
+  return `'${String(value).replaceAll("'", "''")}'`;
+}
+
+async function createWindowsPersonalLauncher() {
+  if (!currentTheme.brandImage) throw new Error("请先上传品牌 Logo 或形象");
+  const appName = safeAppName(currentTheme.brandName);
+  const localData = process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local");
+  const launcherDir = path.join(localData, "Lingxi Skin Manager", "Launchers", `${appName}-${Date.now()}`);
+  await fs.mkdir(launcherDir, { recursive: true });
+
+  const match = currentTheme.brandImage.match(/^data:image\/(png|jpeg|webp);base64,(.+)$/i);
+  if (!match) throw new Error("Logo 图片格式无法生成应用图标");
+  const sourceImage = path.join(launcherDir, `icon-source.${match[1] === "jpeg" ? "jpg" : match[1]}`);
+  const iconPath = path.join(launcherDir, "AppIcon.ico");
+  await fs.writeFile(sourceImage, Buffer.from(match[2], "base64"));
+
+  const managerScript = path.join(import.meta.dirname, "server.mjs");
+  const launchScript = path.join(launcherDir, "launch.ps1");
+  const managerArguments = IS_SEA ? "@('--background')" : "@($serverArgument)";
+  const launchPowerShell = `$ErrorActionPreference = 'SilentlyContinue'\n` +
+    `$node = ${powerShellQuote(process.execPath)}\n` +
+    `$server = ${powerShellQuote(managerScript)}\n` +
+    `$serverArgument = '"' + $server + '"'\n` +
+    `try { Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:17363/api/status' -TimeoutSec 1 | Out-Null } catch { Start-Process -WindowStyle Hidden -FilePath $node -ArgumentList ${managerArguments} }\n` +
+    `for ($i = 0; $i -lt 60; $i++) { try { $status = Invoke-RestMethod -Uri 'http://127.0.0.1:17363/api/status' -TimeoutSec 1; break } catch { Start-Sleep -Milliseconds 100 } }\n` +
+    `if ($status.connected) { Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:17363/api/apply' -ContentType 'application/json' -Body '{}' | Out-Null } else { Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:17363/api/restart' -ContentType 'application/json' -Body '{}' | Out-Null }\n`;
+  await fs.writeFile(launchScript, launchPowerShell, "utf8");
+
+  const shortcutScript = path.join(launcherDir, "create-shortcuts.ps1");
+  const powershellPath = path.join(process.env.SystemRoot || "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+  const shortcutArguments = `-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "${launchScript}"`;
+  const shortcutPowerShell = `Add-Type -AssemblyName System.Drawing\n` +
+    `$source = [System.Drawing.Image]::FromFile(${powerShellQuote(sourceImage)})\n` +
+    `$bitmap = New-Object System.Drawing.Bitmap 256, 256\n` +
+    `$graphics = [System.Drawing.Graphics]::FromImage($bitmap)\n` +
+    `$graphics.Clear([System.Drawing.Color]::Transparent)\n` +
+    `$ratio = [Math]::Min(256 / $source.Width, 256 / $source.Height)\n` +
+    `$width = [int]($source.Width * $ratio); $height = [int]($source.Height * $ratio)\n` +
+    `$graphics.DrawImage($source, [int]((256-$width)/2), [int]((256-$height)/2), $width, $height)\n` +
+    `$icon = [System.Drawing.Icon]::FromHandle($bitmap.GetHicon())\n` +
+    `$stream = [System.IO.File]::Open(${powerShellQuote(iconPath)}, [System.IO.FileMode]::Create)\n` +
+    `$icon.Save($stream); $stream.Close(); $graphics.Dispose(); $bitmap.Dispose(); $source.Dispose()\n` +
+    `$shell = New-Object -ComObject WScript.Shell\n` +
+    `$desktopShortcut = Join-Path ([Environment]::GetFolderPath('Desktop')) ${powerShellQuote(`${appName}.lnk`)}\n` +
+    `$startShortcut = Join-Path ([Environment]::GetFolderPath('Programs')) ${powerShellQuote(`${appName}.lnk`)}\n` +
+    `foreach ($shortcutPath in @($desktopShortcut, $startShortcut)) {\n` +
+    `  $shortcut = $shell.CreateShortcut($shortcutPath)\n` +
+    `  $shortcut.TargetPath = ${powerShellQuote(powershellPath)}\n` +
+    `  $shortcut.Arguments = ${powerShellQuote(shortcutArguments)}\n` +
+    `  $shortcut.WorkingDirectory = ${powerShellQuote(launcherDir)}\n` +
+    `  $shortcut.IconLocation = ${powerShellQuote(`${iconPath},0`)}\n` +
+    `  $shortcut.Save()\n` +
+    `}\n` +
+    `Write-Output $desktopShortcut\n`;
+  await fs.writeFile(shortcutScript, shortcutPowerShell, "utf8");
+  const { stdout } = await execFileAsync("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", shortcutScript], { windowsHide: true });
+  await fs.rm(shortcutScript, { force: true });
+  const desktopShortcut = stdout.trim();
+  spawn("explorer.exe", ["/select,", desktopShortcut], { detached: true, stdio: "ignore" }).unref();
+  return { appPath: desktopShortcut, appName, locationLabel: "桌面和开始菜单" };
+}
+
 async function createPersonalLauncher() {
-  if (!IS_MACOS) throw new Error("目前仅支持 macOS");
-  return createMacPersonalLauncher();
+  if (IS_WINDOWS) return createWindowsPersonalLauncher();
+  if (IS_MACOS) return createMacPersonalLauncher();
+  throw new Error(`暂不支持当前系统：${PLATFORM}`);
 }
 
 async function statusPayload() {
+  const connected = await isConnected();
   return {
-    running: await isLingxiRunning(),
-    connected: await isConnected(),
+    platform: PLATFORM,
+    running: connected || await isLingxiRunning(),
+    connected,
     enabled: currentTheme.enabled,
     lastInjectionAt,
     lastError
@@ -893,10 +984,12 @@ async function serveStatic(response, url) {
     response.writeHead(403); response.end(); return;
   }
   try {
-    const data = await fs.readFile(file);
+    const assetKey = `public/${normalized.replaceAll("\\", "/")}`;
+    const data = IS_SEA ? Buffer.from(getAsset(assetKey)) : await fs.readFile(file);
     response.writeHead(200, { "Content-Type": MIME[path.extname(file)] || "application/octet-stream", "Cache-Control": "no-cache" });
     response.end(data);
-  } catch {
+  } catch (error) {
+    if (IS_SEA) console.error(`Embedded asset failed: public/${normalized.replaceAll("\\", "/")} (${error.message})`);
     response.writeHead(404); response.end("Not found");
   }
 }
@@ -909,6 +1002,9 @@ const server = http.createServer(async (request, response) => {
 
 server.on("error", error => {
   if (error.code === "EADDRINUSE") {
+    if (IS_WINDOWS && IS_SEA && !process.argv.includes("--background")) {
+      spawn("explorer.exe", [`http://${HOST}:${PORT}`], { detached: true, stdio: "ignore" }).unref();
+    }
     process.exit(0);
   }
   throw error;
@@ -917,6 +1013,9 @@ server.on("error", error => {
 server.listen(PORT, HOST, () => {
   const managerUrl = `http://${HOST}:${PORT}`;
   console.log(`Lingxi Skin Manager: ${managerUrl}`);
+  if (IS_WINDOWS && IS_SEA && !process.argv.includes("--background")) {
+    spawn("explorer.exe", [managerUrl], { detached: true, stdio: "ignore" }).unref();
+  }
 });
 
 setInterval(async () => {
