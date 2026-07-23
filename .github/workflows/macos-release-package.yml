@@ -1,0 +1,44 @@
+name: Build macOS Release Package
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/macos-release-package.yml"
+      - "scripts/build-macos-from-release.sh"
+      - "server.mjs"
+      - "public/**"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - name: Download stable macOS application shell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p base-package
+          gh release download v0.6.4 --pattern '*macOS.zip' --dir base-package
+      - name: Rebuild and sign macOS package
+        run: |
+          chmod +x scripts/build-macos-from-release.sh
+          scripts/build-macos-from-release.sh base-package/*.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WPS-Lingxi-Skin-Manager-v0.7.3-macOS
+          path: dist/WPS-Lingxi-Skin-Manager-v0.7.3-macOS.zip
+          if-no-files-found: error
