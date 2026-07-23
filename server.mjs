@@ -105,7 +105,7 @@ function sanitizeTheme(input = {}) {
     composerAnchor: ["right-top", "left-top", "right-bottom", "left-bottom", "top-center"].includes(input.composerAnchor) ? input.composerAnchor : DEFAULT_THEME.composerAnchor,
     composerConversationAnchor: ["right-top", "left-top", "right-bottom", "left-bottom", "top-center"].includes(input.composerConversationAnchor) ? input.composerConversationAnchor : "",
     composerScale: clampNumber(input.composerScale, 0.12, 0.34, DEFAULT_THEME.composerScale),
-    composerOverlap: clampNumber(input.composerOverlap, 0.08, 0.7, DEFAULT_THEME.composerOverlap),
+    composerOverlap: clampNumber(input.composerOverlap, 0.02, 0.7, DEFAULT_THEME.composerOverlap),
     backgroundScope: input.backgroundScope === "full" ? "full" : "content",
     backgroundFit: ["cover", "contain", "original", "tile"].includes(input.backgroundFit) ? input.backgroundFit : "cover",
     backgroundPosition: ["center", "top", "right", "left", "bottom"].includes(input.backgroundPosition) ? input.backgroundPosition : "center",

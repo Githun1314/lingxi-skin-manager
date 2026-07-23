@@ -42,8 +42,26 @@ button, input { font: inherit; }
 .preset[data-style="pixel"] .preset-swatch { border-radius: 1px; image-rendering: pixelated; background-image: linear-gradient(rgba(0,0,0,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.08) 1px,transparent 1px); background-size: 8px 8px; }
 .preset[data-style="pixel"] .orb { border-radius: 1px; box-shadow: 3px 3px 0 rgba(0,0,0,.25); }
 .preset[data-style="cyber"] .preset-swatch { background-image: linear-gradient(rgba(0,255,225,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,225,.08) 1px,transparent 1px); background-size: 10px 10px; }
-.preset[data-series="CJ 原创 IP"] .preset-swatch, .preset[data-series="WPS 家族"] .preset-swatch, .preset[data-series="游戏 IP 概念"] .preset-swatch { height: 76px; }
-.preset[data-series="CJ 原创 IP"] .preset-swatch::after, .preset[data-series="WPS 家族"] .preset-swatch::after, .preset[data-series="游戏 IP 概念"] .preset-swatch::after { background-size:contain; background-position:right bottom; }
+.preset[data-series="CJ 原创 IP"] .preset-swatch, .preset[data-series="WPS 家族"] .preset-swatch, .preset[data-series="游戏 IP 概念"] .preset-swatch {
+  height:76px;
+  overflow:visible;
+  isolation:isolate;
+}
+.preset[data-series="CJ 原创 IP"] .preset-swatch::after, .preset[data-series="WPS 家族"] .preset-swatch::after, .preset[data-series="游戏 IP 概念"] .preset-swatch::after {
+  inset:-12px 0 -7px 30%;
+  background-size:contain;
+  background-position:right bottom;
+  z-index:1;
+}
+.preset:is(
+  [data-style="wps_mongoose_crawl"],
+  [data-style="game_peace"],
+  [data-style="game_goose"],
+  [data-style="xoyo_chicken"],
+  [data-style="jx3_swordsman"]
+) .preset-swatch::after {
+  inset:-2px 5px -9px 44%;
+}
 .preset[data-series="CJ 原创 IP"] .preset-swatch .side, .preset[data-series="CJ 原创 IP"] .preset-swatch .orb,
 .preset[data-series="WPS 家族"] .preset-swatch .side, .preset[data-series="WPS 家族"] .preset-swatch .orb,
 .preset[data-series="游戏 IP 概念"] .preset-swatch .side, .preset[data-series="游戏 IP 概念"] .preset-swatch .orb { opacity:0; }
