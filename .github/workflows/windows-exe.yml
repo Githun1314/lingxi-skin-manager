@@ -43,7 +43,9 @@ jobs:
         shell: powershell
         run: |
           $exe = Join-Path $PWD "dist\WPS-Lingxi-Skin-Manager-Windows-x64.exe"
-          $process = Start-Process -FilePath $exe -ArgumentList "--background" -PassThru
+          $stdout = Join-Path $env:RUNNER_TEMP "manager-stdout.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "manager-stderr.log"
+          $process = Start-Process -FilePath $exe -ArgumentList "--background" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
           try {
             $ready = $false
             for ($index = 0; $index -lt 80; $index++) {
@@ -55,12 +57,21 @@ jobs:
                   break
                 }
               } catch {}
+              if ($process.HasExited) { break }
               Start-Sleep -Milliseconds 250
             }
-            if (-not $ready) { throw "The packaged manager did not serve its embedded interface." }
+            if (-not $ready) {
+              Write-Host "--- executable stdout ---"
+              if (Test-Path $stdout) { Get-Content $stdout }
+              Write-Host "--- executable stderr ---"
+              if (Test-Path $stderr) { Get-Content $stderr }
+              throw "The packaged manager did not serve its embedded interface."
+            }
           } finally {
             if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
           }
+      - name: Hide the command window in the final executable
+        run: node scripts/set-windows-gui-subsystem.mjs dist/WPS-Lingxi-Skin-Manager-Windows-x64.exe
       - name: Write SHA256 checksum
         shell: powershell
         run: |
