@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here.
 
+## [0.7.3] - 2026-07-23
+
+- Added Windows 10/11 x64 support for the standalone WPS 灵犀 client.
+- Added automatic Windows client discovery, process restart, CDP connection and personalized shortcuts.
+- Added a single-file Windows EXE build with GitHub Actions smoke testing and artifact upload.
+- Updated project documentation and issue templates for macOS and Windows.
+
 ## [0.6.4] - 2026-07-23
 
 - Removed the native outline underneath the conversation area's rounded corner.

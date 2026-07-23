@@ -1,10 +1,14 @@
 {
   "name": "lingxi-skin-manager",
-  "version": "0.6.4",
+  "version": "0.7.3",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check public/app.js"
+    "check": "node --check server.mjs && node --check public/app.js && node --check scripts/build-windows-exe.mjs && node --check scripts/set-windows-gui-subsystem.mjs && node scripts/test-windows-platform.mjs",
+    "build:windows:exe": "node scripts/build-windows-exe.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
   }
 }
