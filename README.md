@@ -2,7 +2,7 @@
 
 > 每个人的办公助理，当然也可以长得不一样。
 
-[![version](https://img.shields.io/badge/version-v0.7.0-7257e8)](https://github.com/Githun1314/lingxi-skin-manager/releases/latest)
+[![version](https://img.shields.io/badge/version-v0.7.1-7257e8)](https://github.com/Githun1314/lingxi-skin-manager/releases/latest)
 [![platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-111111)](#系统要求)
 [![license](https://img.shields.io/badge/code%20license-MIT-30a46c)](LICENSE)
 

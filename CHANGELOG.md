@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here.
 
+## [0.7.1] - 2026-07-23
+
+- Added a self-contained Windows x64 EXE with the runtime and all theme assets embedded.
+- Added automatic browser opening and no-console double-click startup behavior.
+- Added a Windows cloud build that launches the generated EXE and verifies its embedded interface before publishing it.
+- Added SHA256 generation for Windows release verification.
+
 ## [0.7.0] - 2026-07-23
 
 - Added a standalone Windows x64 preview package that automatically downloads and verifies the official Node.js runtime on first launch.
