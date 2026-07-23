@@ -61,3 +61,10 @@ jobs:
       - name: Verify signature and install the official Windows client
         shell: powershell
         run: ./scripts/windows/install-official-lingxi.ps1
+      - name: Upload Windows client screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lingxi-windows-client-screenshots
+          path: ${{ runner.temp }}/lingxi-windows-*.png
+          if-no-files-found: warn
