@@ -1,17 +1,19 @@
 # Windows 使用说明
 
-Windows 版为独立便携包，不修改 WPS 灵犀的安装文件，也不要求用户另外安装 Node.js。首次启动会联网下载 Node.js 官方 Windows x64 运行环境，并在 SHA256 校验通过后保存到便携包的 `runtime` 目录。
+推荐使用单文件版 `WPS-Lingxi-Skin-Manager-Windows-x64.exe`。它把管理器、运行环境和皮肤素材放在一个文件中，不修改 WPS 灵犀的安装文件，也不要求用户安装 Node.js 或解压其他文件。
 
 ## 快速开始
 
-1. 下载并完整解压 `WPS灵犀皮肤管理器-v0.7.0-Windows-x64.zip`。
-2. 双击 `Start-Lingxi-Skin-Manager.cmd`。
+1. 下载 `WPS-Lingxi-Skin-Manager-Windows-x64.exe`。
+2. 双击运行，管理页面会自动在默认浏览器中打开。
 3. 浏览器打开管理页面后，点击“连接并重新启动灵犀”。
 4. 选择皮肤并点击“应用皮肤”。
 
-首次启动需要访问 `nodejs.org`，下载约 35MB 的官方运行环境；后续启动直接使用本地文件。
+单文件版不会在首次启动时下载额外运行环境。主题配置和上传素材仍只保存在本机。
 
-需要关闭后台管理器时，双击包内的 `Stop-Lingxi-Skin-Manager.cmd`。
+目前测试版未进行商业代码签名，Windows 可能显示 SmartScreen 提示。公开大范围分发前建议使用代码签名证书签署 `.exe`。
+
+原有 ZIP 便携包仍保留为备用版本；它提供单独的启动和停止脚本。
 
 ## 灵犀路径识别
 

@@ -5,6 +5,7 @@ import os from "node:os";
 import { spawn, execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { pathToFileURL } from "node:url";
+import { isSea, getAsset } from "node:sea";
 import { fileExists, findWindowsLingxiExecutable } from "./lib/windows-platform.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -14,6 +15,7 @@ const DEBUG_PORT = 9229;
 const PLATFORM = process.platform;
 const IS_MACOS = PLATFORM === "darwin";
 const IS_WINDOWS = PLATFORM === "win32";
+const IS_SEA = isSea();
 const MAC_APP_PATH = "/Applications/WPS 灵犀.app";
 const MAC_APP_EXECUTABLE = `${MAC_APP_PATH}/Contents/MacOS/WPS 灵犀`;
 const PUBLIC_DIR = path.join(import.meta.dirname, "public");
@@ -820,11 +822,12 @@ async function createWindowsPersonalLauncher() {
 
   const managerScript = path.join(import.meta.dirname, "server.mjs");
   const launchScript = path.join(launcherDir, "launch.ps1");
+  const managerArguments = IS_SEA ? "@('--background')" : "@($serverArgument)";
   const launchPowerShell = `$ErrorActionPreference = 'SilentlyContinue'\n` +
     `$node = ${powerShellQuote(process.execPath)}\n` +
     `$server = ${powerShellQuote(managerScript)}\n` +
     `$serverArgument = '"' + $server + '"'\n` +
-    `try { Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:17363/api/status' -TimeoutSec 1 | Out-Null } catch { Start-Process -WindowStyle Hidden -FilePath $node -ArgumentList @($serverArgument) }\n` +
+    `try { Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:17363/api/status' -TimeoutSec 1 | Out-Null } catch { Start-Process -WindowStyle Hidden -FilePath $node -ArgumentList ${managerArguments} }\n` +
     `for ($i = 0; $i -lt 60; $i++) { try { $status = Invoke-RestMethod -Uri 'http://127.0.0.1:17363/api/status' -TimeoutSec 1; break } catch { Start-Sleep -Milliseconds 100 } }\n` +
     `if ($status.connected) { Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:17363/api/apply' -ContentType 'application/json' -Body '{}' | Out-Null } else { Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:17363/api/restart' -ContentType 'application/json' -Body '{}' | Out-Null }\n`;
   await fs.writeFile(launchScript, launchPowerShell, "utf8");
@@ -977,7 +980,8 @@ async function serveStatic(response, url) {
     response.writeHead(403); response.end(); return;
   }
   try {
-    const data = await fs.readFile(file);
+    const assetKey = `public/${normalized.replaceAll("\\", "/")}`;
+    const data = IS_SEA ? Buffer.from(getAsset(assetKey)) : await fs.readFile(file);
     response.writeHead(200, { "Content-Type": MIME[path.extname(file)] || "application/octet-stream", "Cache-Control": "no-cache" });
     response.end(data);
   } catch {
@@ -992,11 +996,22 @@ const server = http.createServer(async (request, response) => {
 });
 
 server.on("error", error => {
-  if (error.code === "EADDRINUSE") process.exit(0);
+  if (error.code === "EADDRINUSE") {
+    if (IS_WINDOWS && IS_SEA && !process.argv.includes("--background")) {
+      spawn("explorer.exe", [`http://${HOST}:${PORT}`], { detached: true, stdio: "ignore" }).unref();
+    }
+    process.exit(0);
+  }
   throw error;
 });
 
-server.listen(PORT, HOST, () => console.log(`Lingxi Skin Manager: http://${HOST}:${PORT}`));
+server.listen(PORT, HOST, () => {
+  const managerUrl = `http://${HOST}:${PORT}`;
+  console.log(`Lingxi Skin Manager: ${managerUrl}`);
+  if (IS_WINDOWS && IS_SEA && !process.argv.includes("--background")) {
+    spawn("explorer.exe", [managerUrl], { detached: true, stdio: "ignore" }).unref();
+  }
+});
 
 setInterval(async () => {
   if (polling || !currentTheme.enabled) return;
