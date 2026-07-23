@@ -56,15 +56,5 @@ const seaConfig = {
 await fs.writeFile(configPath, `${JSON.stringify(seaConfig, null, 2)}\n`);
 execFileSync(process.execPath, ["--build-sea", configPath], { stdio: "inherit" });
 
-// Use the Windows GUI subsystem so a command window does not remain open after
-// users double-click the manager.
-const executable = Buffer.from(await fs.readFile(outputPath));
-const peOffset = executable.readUInt32LE(0x3c);
-const optionalHeaderOffset = peOffset + 24;
-const magic = executable.readUInt16LE(optionalHeaderOffset);
-if (magic !== 0x20b && magic !== 0x10b) throw new Error("Unexpected Windows PE optional-header format.");
-executable.writeUInt16LE(2, optionalHeaderOffset + 68);
-await fs.writeFile(outputPath, executable);
-
 const stat = await fs.stat(outputPath);
 console.log(`Built ${outputPath} (${Math.round(stat.size / 1024 / 1024)} MiB)`);
