@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 
 ## [0.7.0] - 2026-07-23
 
-- Added a standalone Windows x64 preview package with an embedded Node.js runtime.
+- Added a standalone Windows x64 preview package that automatically downloads and verifies the official Node.js runtime on first launch.
 - Added automatic discovery for common WPS Lingxi Windows installation paths.
 - Added Windows-specific process restart and connection handling.
 - Added personalized Windows desktop and Start menu shortcuts with generated icons.
