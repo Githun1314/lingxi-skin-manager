@@ -25,10 +25,15 @@ Write-Host "Trying the installer's standard silent-install switch..."
 $installRoot = Join-Path $env:RUNNER_TEMP "LingxiInstall"
 New-Item -ItemType Directory -Path $installRoot -Force | Out-Null
 $installStartedAt = Get-Date
-$install = Start-Process -FilePath $installer -ArgumentList @("/S", "/D=$installRoot") -PassThru
-if (-not $install.WaitForExit(600000)) {
+$install = $null
+for ($attempt = 1; $attempt -le 2; $attempt++) {
+  Write-Host "Silent-install attempt $attempt of 2..."
+  $install = Start-Process -FilePath $installer -ArgumentList @("/S", "/D=$installRoot") -PassThru
+  if ($install.WaitForExit(480000)) { break }
   Stop-Process -Id $install.Id -Force -ErrorAction SilentlyContinue
-  throw "The official installer did not finish within 10 minutes."
+  if ($attempt -eq 2) { throw "The official installer did not finish after two attempts." }
+  Write-Host "The first installer process stalled; retrying once in the same clean install directory."
+  Start-Sleep -Seconds 3
 }
 if ($install.ExitCode -ne 0) { throw "Installer exited with code $($install.ExitCode)." }
 Start-Sleep -Seconds 8
@@ -50,6 +55,7 @@ $candidates = foreach ($root in $searchRoots) {
 
 $matches = @($candidates | Where-Object {
   $_.Name -notmatch "uninstall|installer|updater" -and (
+    $_.FullName.StartsWith($installRoot) -or
     $names -contains $_.Name -or
     $_.Name -match "Lingxi|灵犀" -or
     $_.VersionInfo.ProductName -match "Lingxi|灵犀" -or
@@ -59,7 +65,14 @@ $matches = @($candidates | Where-Object {
 } | Sort-Object @{ Expression = { $_.FullName.StartsWith($installRoot) }; Descending = $true }, Length -Descending)
 
 if ($matches.Count -eq 0) {
-  Write-Host "Recently created executables for installation diagnostics:"
+  Write-Host "Executables in the requested installation directory:"
+  $candidates |
+    Where-Object { $_.FullName.StartsWith($installRoot) } |
+    Select-Object FullName, Length, LastWriteTime,
+      @{ Name = "Product"; Expression = { $_.VersionInfo.ProductName } },
+      @{ Name = "Company"; Expression = { $_.VersionInfo.CompanyName } } |
+    Format-Table -AutoSize
+  Write-Host "Recently created executables in all search roots:"
   $candidates |
     Where-Object { $_.LastWriteTime -ge $installStartedAt } |
     Select-Object -First 80 FullName, Length, LastWriteTime,
