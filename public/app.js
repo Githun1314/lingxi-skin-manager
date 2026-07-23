@@ -12,7 +12,7 @@ const presets = [
 ];
 
 const colorFields = ["primary", "background", "sidebar", "card", "text", "radius", "decorationOpacity", "backgroundOverlay", "backgroundBlur", "composerScale", "composerOverlap"];
-const state = { brandImage: "", decorationImage: "", composerImage:"", decorationMode: "wallpaper", styleId: "claude", connected: false, platform: "", sourceImage: null, darkPalette:null, previewMode:matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light" };
+const state = { brandImage: "", decorationImage: "", composerImage:"", decorationMode: "wallpaper", styleId: "claude", connected: false, sourceImage: null, darkPalette:null, previewMode:matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light" };
 const $ = selector => document.querySelector(selector);
 
 function renderPresets() {
@@ -283,9 +283,7 @@ async function api(path, options = {}) {
 function showNotice(message, success=false) { $("#notice").textContent=message; $("#notice").classList.toggle("success",success); }
 function setBusy(button,busy,text) { if(!button.dataset.label) button.dataset.label=button.textContent; button.disabled=busy; button.textContent=busy?text:button.dataset.label; }
 function renderStatus(status) {
-  state.platform=status.platform||state.platform;
-  if(state.platform==="win32") $("#launcherDescription").textContent="把这套 Logo 和名称生成到 Windows 桌面和开始菜单；实际运行的仍是官方 WPS 灵犀独立客户端。";
-  else if(state.platform==="darwin") $("#launcherDescription").textContent="把这套 Logo 和名称生成到 Finder、启动台或程序坞；实际运行的仍是官方 WPS 灵犀。";
+  $("#launcherDescription").textContent="把这套 Logo 和名称生成到 Finder、启动台或程序坞；实际运行的仍是官方 WPS 灵犀。";
   state.connected=status.connected; $("#statusCard").classList.toggle("connected",status.connected);
   if(status.connected){$("#statusTitle").textContent="已连接灵犀";$("#statusText").textContent=status.enabled?"皮肤会在刷新后自动恢复":"可以直接应用皮肤";$("#actionHint").textContent="已连接，可以即时应用和调整";}
   else if(status.running){$("#statusTitle").textContent="灵犀正在运行";$("#statusText").textContent="需要重新启动一次以开启换肤";$("#actionHint").textContent="点击下方按钮重新连接，不会删除会话";}

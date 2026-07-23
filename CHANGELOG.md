@@ -2,28 +2,6 @@
 
 All notable changes to this project are documented here.
 
-## [0.7.2] - 2026-07-23
-
-- Fixed Windows discovery so it targets only the standalone WPS Lingxi desktop client.
-- Removed WPS Office plugin directories and `wpslingxi.exe` from automatic discovery.
-- Added an explicit rejection message when `LINGXI_APP_PATH` points to the Office plugin.
-- Updated Windows tests and distribution guidance to distinguish the standalone client from the Office plugin.
-
-## [0.7.1] - 2026-07-23
-
-- Added a self-contained Windows x64 EXE with the runtime and all theme assets embedded.
-- Added automatic browser opening and no-console double-click startup behavior.
-- Added a Windows cloud build that launches the generated EXE and verifies its embedded interface before publishing it.
-- Added SHA256 generation for Windows release verification.
-
-## [0.7.0] - 2026-07-23
-
-- Added a standalone Windows x64 preview package that automatically downloads and verifies the official Node.js runtime on first launch.
-- Added automatic discovery for common WPS Lingxi Windows installation paths.
-- Added Windows-specific process restart and connection handling.
-- Added personalized Windows desktop and Start menu shortcuts with generated icons.
-- Added platform-aware interface copy and Windows installation documentation.
-
 ## [0.6.4] - 2026-07-23
 
 - Removed the native outline underneath the conversation area's rounded corner.
