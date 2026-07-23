@@ -1,0 +1,106 @@
+name: Publish Dual-Platform Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag
+        required: true
+        default: v0.7.3
+      title:
+        description: Release title
+        required: true
+        default: v0.7.3 · macOS 与 Windows 双平台支持
+      base_mac_tag:
+        description: Stable macOS application shell release
+        required: true
+        default: v0.6.4
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "26.5.0"
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build:windows:exe
+      - run: node scripts/set-windows-gui-subsystem.mjs dist/WPS-Lingxi-Skin-Manager-Windows-x64.exe
+      - name: Prepare versioned Windows assets
+        shell: powershell
+        run: |
+          $source = "dist\WPS-Lingxi-Skin-Manager-Windows-x64.exe"
+          $target = "dist\WPS-Lingxi-Skin-Manager-${{ inputs.tag }}-Windows-x64.exe"
+          Move-Item $source $target
+          $hash = (Get-FileHash -Algorithm SHA256 $target).Hash.ToLowerInvariant()
+          "$hash  $(Split-Path $target -Leaf)" |
+            Set-Content -Encoding ascii "$target.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: |
+            dist/WPS-Lingxi-Skin-Manager-${{ inputs.tag }}-Windows-x64.exe
+            dist/WPS-Lingxi-Skin-Manager-${{ inputs.tag }}-Windows-x64.exe.sha256
+          if-no-files-found: error
+
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - name: Download stable macOS application shell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p base-package
+          gh release download "${{ inputs.base_mac_tag }}" --pattern '*macOS.zip' --dir base-package
+      - name: Build versioned macOS package
+        run: |
+          chmod +x scripts/build-macos-from-release.sh
+          scripts/build-macos-from-release.sh base-package/*.zip
+          FILE="dist/WPS-Lingxi-Skin-Manager-${{ inputs.tag }}-macOS.zip"
+          shasum -a 256 "$FILE" | sed "s#  dist/#  #" > "$FILE.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: |
+            dist/WPS-Lingxi-Skin-Manager-${{ inputs.tag }}-macOS.zip
+            dist/WPS-Lingxi-Skin-Manager-${{ inputs.tag }}-macOS.zip.sha256
+          if-no-files-found: error
+
+  release:
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ inputs.tag }}" dist/* \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "${{ inputs.title }}" \
+            --generate-notes \
+            --latest
