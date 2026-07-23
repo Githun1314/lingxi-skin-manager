@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here.
 
+## [0.8.1] - 2026-07-23
+
+- Calibrated five hanger assets so hands and forearms sit flush against the real composer edge without sinking into the input area, including a shallower dedicated setting for the long-armed peeking mongoose.
+- Removed transparent bottom padding from the peeking mongoose and four game concept hanger images.
+- Refined preset cards with smaller artwork and controlled overflow above and below the preview boundary.
+- Moved the detective goose to the right side on the home screen to keep placeholder text unobstructed.
+
 ## [0.8.0] - 2026-07-23
 
 - Added four non-official game IP concept themes with original edge-hanging artwork: tactical operator, detective goose, laughing yellow chicken and wuxia swordsman.
