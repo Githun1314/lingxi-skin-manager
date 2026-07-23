@@ -5,6 +5,6 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check public/app.js && node scripts/test-windows-platform.mjs"
+    "check": "node --check server.mjs && node --check public/app.js && node --check scripts/capture-cdp-screenshot.mjs && node scripts/test-windows-platform.mjs"
   }
 }

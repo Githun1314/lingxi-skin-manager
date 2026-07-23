@@ -4,7 +4,8 @@ $installerUrl = "https://qn.cache.wpscdn.cn/lingxi-ai/win/1.2.23/lingxi-desktop-
 $installer = Join-Path $env:RUNNER_TEMP "lingxi-desktop-1.2.23-setup.exe"
 
 Write-Host "Downloading the official Lingxi Windows 1.2.23 installer..."
-Invoke-WebRequest -UseBasicParsing -Uri $installerUrl -OutFile $installer
+& curl.exe --fail --location --retry 3 --silent --show-error --output $installer $installerUrl
+if ($LASTEXITCODE -ne 0) { throw "Official installer download failed with curl exit code $LASTEXITCODE." }
 
 $file = Get-Item $installer
 if ($file.Length -lt 450MB) { throw "Installer download is unexpectedly small: $($file.Length) bytes" }
@@ -69,6 +70,57 @@ try {
   }
   if ($null -eq $debugVersion) { throw "The official client started, but its local debugging endpoint did not become ready." }
   Write-Host "Debug endpoint browser: $($debugVersion.Browser)"
+
+  $server = Join-Path $repoRoot "server.mjs"
+  $manager = Start-Process -FilePath (Get-Command node.exe).Source -ArgumentList @("`"$server`"") -WorkingDirectory $repoRoot -PassThru -WindowStyle Hidden
+  try {
+    for ($index = 0; $index -lt 80; $index++) {
+      try {
+        Invoke-RestMethod -Uri "http://127.0.0.1:17363/api/status" -TimeoutSec 1 | Out-Null
+        break
+      } catch {
+        Start-Sleep -Milliseconds 100
+      }
+    }
+
+    $theme = @{
+      name = "Windows 云端验证"
+      styleId = "claude"
+      primary = "#c15f3c"
+      background = "#f4f0e8"
+      sidebar = "#ebe4d8"
+      card = "#fffdf9"
+      text = "#2f2a25"
+      darkPrimary = "#e28c70"
+      darkBackground = "#1d1c19"
+      darkSidebar = "#171614"
+      darkCard = "#292824"
+      darkText = "#f2eee7"
+      radius = 18
+      brandName = "灵犀"
+      enabled = $true
+    } | ConvertTo-Json
+    $applyResult = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:17363/api/theme" -ContentType "application/json" -Body $theme
+    Write-Host "Theme applied to a matching page: $($applyResult.applied)"
+    Start-Sleep -Seconds 4
+
+    node (Join-Path $repoRoot "scripts\capture-cdp-screenshot.mjs") (Join-Path $env:RUNNER_TEMP "lingxi-windows-client.png")
+
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+    $bounds = [System.Windows.Forms.SystemInformation]::VirtualScreen
+    $bitmap = New-Object System.Drawing.Bitmap $bounds.Width, $bounds.Height
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    try {
+      $graphics.CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size)
+      $bitmap.Save((Join-Path $env:RUNNER_TEMP "lingxi-windows-desktop.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+    } finally {
+      $graphics.Dispose()
+      $bitmap.Dispose()
+    }
+  } finally {
+    if ($manager -and -not $manager.HasExited) { Stop-Process -Id $manager.Id -Force }
+  }
 } finally {
   Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
     Where-Object { $_.ExecutablePath -eq $detected } |
