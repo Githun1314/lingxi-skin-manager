@@ -50,6 +50,7 @@ jobs:
           $process = Start-Process -FilePath $exe -ArgumentList "--background" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
           try {
             $ready = $false
+            $ErrorActionPreference = "SilentlyContinue"
             for ($index = 0; $index -lt 80; $index++) {
               & curl.exe --fail --silent --show-error --output $statusFile "http://127.0.0.1:17363/api/status" 2>$null
               $statusExit = $LASTEXITCODE
@@ -62,6 +63,7 @@ jobs:
               if ($process.HasExited) { break }
               Start-Sleep -Milliseconds 250
             }
+            $ErrorActionPreference = "Stop"
             if (-not $ready) {
               Write-Host "--- executable stdout ---"
               if (Test-Path $stdout) { Get-Content $stdout }
