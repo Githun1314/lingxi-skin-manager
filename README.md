@@ -70,6 +70,7 @@ npm start
 
 ```bash
 ./scripts/build-macos.sh
+npm run build:windows:exe
 ```
 
 ## 主题设计说明

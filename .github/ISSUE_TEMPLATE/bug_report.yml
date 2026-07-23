@@ -14,7 +14,7 @@ body:
     id: environment
     attributes:
       label: 环境
-      placeholder: macOS 版本、WPS 灵犀版本、日间或夜间模式
+      placeholder: macOS 或 Windows 版本、WPS 灵犀版本、日间或夜间模式
     validations:
       required: true
   - type: input
