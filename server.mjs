@@ -50,6 +50,7 @@ const DEFAULT_THEME = {
   composerDecorationEnabled: false,
   composerDecorationSource: "brand",
   composerAnchor: "right-top",
+  composerConversationAnchor: "",
   composerScale: 0.2,
   composerOverlap: 0.32,
   backgroundScope: "content",
@@ -80,7 +81,7 @@ function sanitizeTheme(input = {}) {
     ? value.slice(0, 7 * 1024 * 1024) : "";
   return {
     name: typeof input.name === "string" ? input.name.trim().slice(0, 30) || "我的皮肤" : "我的皮肤",
-    styleId: ["claude", "chatgpt", "cj_mecha", "cj_shanhai", "cj_pixel", "cj_toy", "wps_mongoose", "wps_mongoose_crawl", "wps_sister", "wps_sister_cheer", "custom"].includes(input.styleId) ? input.styleId : "custom",
+    styleId: ["claude", "chatgpt", "cj_mecha", "cj_shanhai", "cj_pixel", "cj_toy", "wps_mongoose", "wps_mongoose_crawl", "wps_sister", "wps_sister_cheer", "game_peace", "game_goose", "xoyo_chicken", "jx3_swordsman", "custom"].includes(input.styleId) ? input.styleId : "custom",
     primary: safeColor(input.primary, DEFAULT_THEME.primary),
     background: safeColor(input.background, DEFAULT_THEME.background),
     sidebar: safeColor(input.sidebar, DEFAULT_THEME.sidebar),
@@ -102,6 +103,7 @@ function sanitizeTheme(input = {}) {
     composerDecorationEnabled: Boolean(input.composerDecorationEnabled),
     composerDecorationSource: ["brand", "decoration", "hanger"].includes(input.composerDecorationSource) ? input.composerDecorationSource : "brand",
     composerAnchor: ["right-top", "left-top", "right-bottom", "left-bottom", "top-center"].includes(input.composerAnchor) ? input.composerAnchor : DEFAULT_THEME.composerAnchor,
+    composerConversationAnchor: ["right-top", "left-top", "right-bottom", "left-bottom", "top-center"].includes(input.composerConversationAnchor) ? input.composerConversationAnchor : "",
     composerScale: clampNumber(input.composerScale, 0.12, 0.34, DEFAULT_THEME.composerScale),
     composerOverlap: clampNumber(input.composerOverlap, 0.08, 0.7, DEFAULT_THEME.composerOverlap),
     backgroundScope: input.backgroundScope === "full" ? "full" : "content",
@@ -345,6 +347,7 @@ function buildDomScript(theme) {
     decorationOpacity: theme.decorationOpacity,
     composerImage: theme.enabled && theme.composerDecorationEnabled ? (composerSource || theme.composerImage || theme.decorationImage || theme.brandImage) : "",
     composerAnchor: theme.composerAnchor,
+    composerConversationAnchor: theme.composerConversationAnchor,
     composerScale: theme.composerScale,
     composerOverlap: theme.composerOverlap
   });
@@ -415,8 +418,10 @@ function buildDomScript(theme) {
       const width = Math.min(220, Math.max(82, rect.width * p.composerScale));
       const height = width;
       const overlap = width * p.composerOverlap;
-      const anchorRatio = p.composerAnchor.startsWith('left') ? .14 : p.composerAnchor.startsWith('right') ? .86 : .5;
-      const bottomAnchor = p.composerAnchor === 'right-bottom' || p.composerAnchor === 'left-bottom';
+      const isConversation = rect.top > innerHeight * .58;
+      const activeAnchor = isConversation && p.composerConversationAnchor ? p.composerConversationAnchor : p.composerAnchor;
+      const anchorRatio = activeAnchor.startsWith('left') ? .14 : activeAnchor.startsWith('right') ? .86 : .5;
+      const bottomAnchor = activeAnchor === 'right-bottom' || activeAnchor === 'left-bottom';
       let left = rect.left + rect.width * anchorRatio - width / 2;
       let top = bottomAnchor ? rect.bottom - overlap : rect.top - height + overlap;
       left = Math.max(8, Math.min(innerWidth - width - 8, left));

@@ -2,7 +2,7 @@
 
 > 每个人的办公助理，当然也可以长得不一样。
 
-[![version](https://img.shields.io/badge/version-v0.7.3-7257e8)](https://github.com/Githun1314/lingxi-skin-manager/releases/latest)
+[![version](https://img.shields.io/badge/version-v0.8.0-7257e8)](https://github.com/Githun1314/lingxi-skin-manager/releases/latest)
 [![platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-111111)](#系统要求)
 [![license](https://img.shields.io/badge/code%20license-MIT-30a46c)](LICENSE)
 
@@ -12,13 +12,13 @@
 
 ## 功能
 
-- 10 套完整预设：Claude、ChatGPT、4 套 ChinaJoy 氛围原创主题、4 套 WPS 家族演示主题。
+- 14 套完整预设：Claude、ChatGPT、4 套 ChinaJoy 氛围原创主题、4 套 WPS 家族演示主题，以及 4 套非官方游戏 IP 概念主题。
 - 日间与夜间分别配色，文字、卡片、侧栏、输入框和强调色同步适配。
 - 上传自己的 Logo 或形象，并从素材中自动提取主题色。
 - 同步替换侧边栏、窗口标题、启动页、欢迎区和对话状态中的 Logo 与名称。
 - 可选的品牌身份记忆，让助理在自我介绍时使用自定义名称。
 - 背景支持覆盖范围、裁切方式、焦点、遮罩、模糊和留白模板。
-- 角色可吸附在输入框五个位置，并随窗口、侧栏和输入框尺寸动态调整。
+- 角色可吸附在输入框五个位置，并随窗口、侧栏和输入框尺寸动态调整；支持首页与对话态分别定位，避免遮挡内容。
 - 一键恢复官方默认界面；可生成带自定义名称和图标的本地应用入口。
 
 ![皮肤管理器](docs/images/skin-manager.png)

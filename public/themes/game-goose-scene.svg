@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fbf9ff"/>
+      <stop offset="1" stop-color="#e9e1f8"/>
+    </linearGradient>
+    <pattern id="dots" width="46" height="46" patternUnits="userSpaceOnUse">
+      <circle cx="4" cy="4" r="2" fill="#7058bc" fill-opacity=".08"/>
+    </pattern>
+  </defs>
+  <rect width="1920" height="1200" fill="url(#bg)"/>
+  <rect width="1920" height="1200" fill="url(#dots)"/>
+  <circle cx="1665" cy="180" r="230" fill="#7058bc" fill-opacity=".08"/>
+  <circle cx="1740" cy="250" r="132" fill="#f0a23a" fill-opacity=".1"/>
+  <path d="M1320 0c130 215 221 399 273 581 54 186 151 393 327 619h-610c111-189 167-385 167-586 0-202-53-406-157-614Z" fill="#7058bc" fill-opacity=".045"/>
+  <g fill="none" stroke="#7058bc" stroke-linecap="round" stroke-opacity=".1" stroke-width="12">
+    <path d="M160 894c38-31 89-31 127 0M207 855c-7 19-7 38 0 57"/>
+    <path d="M425 993c38-31 89-31 127 0M472 954c-7 19-7 38 0 57"/>
+  </g>
+  <path d="M104 170c70 0 126-56 126-126M104 206c90 0 162-72 162-162" fill="none" stroke="#f0a23a" stroke-opacity=".16" stroke-width="5"/>
+</svg>

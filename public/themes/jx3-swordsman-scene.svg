@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#edf4f8"/>
+      <stop offset=".58" stop-color="#dbe6ec"/>
+      <stop offset="1" stop-color="#c9d5dc"/>
+    </linearGradient>
+    <radialGradient id="moon">
+      <stop stop-color="#fff" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#b8d5e7" stop-opacity=".1"/>
+    </radialGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="12"/></filter>
+  </defs>
+  <rect width="1920" height="1200" fill="url(#bg)"/>
+  <circle cx="1660" cy="192" r="190" fill="url(#moon)"/>
+  <path d="M0 1005 290 720l167 149 270-314 222 251 182-163 271 271 173-208 345 299v195H0Z" fill="#6e8796" fill-opacity=".12"/>
+  <path d="M0 1082 314 845l241 172 272-203 270 177 250-188 282 193 291-132v336H0Z" fill="#506b7b" fill-opacity=".1"/>
+  <path d="M0 995c262-61 468-31 619 90 151 122 360 124 626 8 265-117 490-119 675-7v114H0Z" fill="#fff" fill-opacity=".26" filter="url(#blur)"/>
+  <g stroke="#537fa9" stroke-opacity=".12" fill="none">
+    <path d="M1200 0c-36 280-20 531 49 754" stroke-width="2"/>
+    <path d="M1232 0c-28 287-4 526 72 718" stroke-width="1"/>
+    <path d="M145 230c127 43 233 31 320-36" stroke-width="4"/>
+    <path d="M112 270c157 47 286 28 387-57" stroke-width="2"/>
+  </g>
+</svg>

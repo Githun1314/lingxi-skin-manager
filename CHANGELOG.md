@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here.
 
+## [0.8.0] - 2026-07-23
+
+- Added four non-official game IP concept themes with original edge-hanging artwork: tactical operator, detective goose, laughing yellow chicken and wuxia swordsman.
+- Added separate home and conversation anchors for edge decorations.
+- Moved left-side decorations to a right-side safe position when the composer enters the active conversation layout.
+- Added complete light and dark palettes, backgrounds, brand marks and unified preset previews for the four new themes.
+
 ## [0.7.3] - 2026-07-23
 
 - Added Windows 10/11 x64 support for the standalone WPS 灵犀 client.
