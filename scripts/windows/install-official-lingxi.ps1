@@ -151,7 +151,7 @@ try {
     Start-Sleep -Seconds 4
 
     $clientPng = Join-Path $env:RUNNER_TEMP "lingxi-windows-login-client.png"
-    node (Join-Path $repoRoot "scripts\capture-cdp-screenshot.mjs") $clientPng
+    node (Join-Path $repoRoot "scripts\capture-cdp-screenshot.mjs") $clientPng --wait-for-content
 
     Add-Type -AssemblyName System.Windows.Forms
     Add-Type -AssemblyName System.Drawing

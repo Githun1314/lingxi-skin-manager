@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 
 const outputPath = process.argv[2];
 if (!outputPath) throw new Error("Usage: node capture-cdp-screenshot.mjs <output.png>");
+const waitForContent = process.argv.includes("--wait-for-content");
 
 const targets = await fetch("http://127.0.0.1:9229/json/list").then(response => response.json());
 const pages = targets.filter(target => target.type === "page" && target.webSocketDebuggerUrl);
@@ -43,6 +44,33 @@ try {
     deviceScaleFactor: 1,
     mobile: false
   });
+  if (waitForContent) {
+    const deadline = Date.now() + 90_000;
+    let state;
+    do {
+      const evaluated = await send("Runtime.evaluate", {
+        expression: `JSON.stringify({
+          readyState: document.readyState,
+          textLength: (document.body?.innerText || "").trim().length,
+          htmlLength: (document.body?.innerHTML || "").length,
+          url: location.href
+        })`,
+        returnByValue: true
+      });
+      state = JSON.parse(evaluated.result?.value || "{}");
+      if (
+        /^https?:/i.test(state.url || "") &&
+        state.readyState === "complete" &&
+        state.textLength >= 20 &&
+        state.htmlLength >= 200
+      ) break;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } while (Date.now() < deadline);
+    if ((state?.textLength || 0) < 20) {
+      throw new Error(`Lingxi did not render meaningful page content within 90 seconds: ${JSON.stringify(state)}`);
+    }
+    console.log(`Rendered page ready: ${JSON.stringify(state)}`);
+  }
   await new Promise(resolve => setTimeout(resolve, 1500));
   const { data } = await send("Page.captureScreenshot", {
     format: "png",
