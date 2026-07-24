@@ -12,6 +12,7 @@ body {
     radial-gradient(circle at 88% 12%, #e8e0ff 0, transparent 28%), #efedf4;
 }
 button, input { font: inherit; }
+[hidden] { display: none !important; }
 .app-shell { max-width: 1380px; margin: 0 auto; padding: 44px 42px 58px; }
 .hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 28px; }
 .eyebrow { margin: 0 0 12px; font-size: 12px; font-weight: 750; letter-spacing: .16em; color: #7457e8; }
@@ -171,11 +172,13 @@ button, input { font: inherit; }
 .action-copy strong, .action-copy small { display: block; }
 .action-copy small { color: #857e8c; font-size: 11px; margin-top: 4px; }
 .buttons { display: grid; grid-template-columns: .4fr 1fr; gap: 10px; margin-top: 15px; }
-.buttons button, .connect-button { height: 44px; border-radius: 13px; border: 0; font-weight: 700; cursor: pointer; }
+.buttons button, .connect-button, .select-app-button { height: 44px; border-radius: 13px; border: 0; font-weight: 700; cursor: pointer; }
 .primary { background: #28242f; color: #fff; }
 .secondary { background: #efedf3; color: #524c59; }
 .connect-button { width: 100%; margin-top: 9px; background: #7457e8; color: #fff; }
-.buttons button:disabled, .connect-button:disabled { opacity: .5; cursor: wait; }
+.select-app-button { width: 100%; margin-top: 7px; background: transparent; color: #665f70; border: 1px solid #ddd8e5; }
+.select-app-button:hover { background: #f5f3f8; }
+.buttons button:disabled, .connect-button:disabled, .select-app-button:disabled { opacity: .5; cursor: wait; }
 .notice { min-height: 18px; margin: 9px 2px 0; color: #7c6570; font-size: 11px; }
 .notice.success { color: #247b52; }
 .share-card { margin-top: 14px; padding: 14px 16px; border-radius: 16px; background: #f4f2f7; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; }

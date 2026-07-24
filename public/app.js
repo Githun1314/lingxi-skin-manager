@@ -291,6 +291,7 @@ function showNotice(message, success=false) { $("#notice").textContent=message; 
 function setBusy(button,busy,text) { if(!button.dataset.label) button.dataset.label=button.textContent; button.disabled=busy; button.textContent=busy?text:button.dataset.label; }
 function renderStatus(status) {
   state.platform=status.platform||state.platform;
+  $("#selectLingxiButton").hidden=!status.appSelectionAvailable;
   if(state.platform==="win32") $("#launcherDescription").textContent="把这套 Logo 和名称生成到 Windows 桌面和开始菜单；实际运行的仍是官方 WPS 灵犀独立客户端。";
   else if(state.platform==="darwin") $("#launcherDescription").textContent="把这套 Logo 和名称生成到 Finder、启动台或程序坞；实际运行的仍是官方 WPS 灵犀。";
   state.connected=status.connected; $("#statusCard").classList.toggle("connected",status.connected);
@@ -301,6 +302,7 @@ function renderStatus(status) {
 async function refreshStatus(){try{renderStatus(await api("/api/status"));}catch{$("#statusTitle").textContent="管理器连接异常";}}
 async function saveAndApply(){const b=$("#applyButton");setBusy(b,true,"正在应用…");showNotice("");try{const r=await api("/api/theme",{method:"POST",body:JSON.stringify(currentTheme())});renderStatus(r.status);const memory=r.memorySynced?"，名称已同步到记忆":"";showNotice(r.applied?`Logo、名称和皮肤已应用${memory}。`:"皮肤已保存，请点击“连接并重新启动灵犀”。",r.applied);}catch(e){showNotice(e.message);}finally{setBusy(b,false);}}
 async function restartAndConnect(){const b=$("#connectButton");setBusy(b,true,"正在重新连接，约需几秒…");showNotice("灵犀会短暂关闭并重新打开，正在等待主界面加载。",true);try{await api("/api/theme",{method:"POST",body:JSON.stringify(currentTheme())});const r=await api("/api/restart",{method:"POST",body:"{}"});renderStatus(r.status);showNotice(`连接成功，Logo、名称和皮肤均已生效${r.memorySynced?"，名称已同步到记忆":""}。`,true);}catch(e){showNotice(`连接失败：${e.message}`);}finally{setBusy(b,false);}}
+async function selectLingxiProgram(){const b=$("#selectLingxiButton");setBusy(b,true,"请选择灵犀程序…");showNotice("请选择灵犀独立客户端，或直接选择桌面的灵犀快捷方式；不要选择 WPS Office 内置插件。",true);try{const r=await api("/api/select-lingxi",{method:"POST",body:"{}"});renderStatus(r.status);showNotice(`已记住 ${r.executableName}，正在连接灵犀。`,true);await restartAndConnect();}catch(e){showNotice(`选择失败：${e.message}`);}finally{setBusy(b,false);}}
 async function createPersonalLauncher(){const b=$("#createLauncherButton");if(!state.brandImage)return showNotice("请先上传 Logo 或形象，再生成应用入口。");setBusy(b,true,"正在生成…");try{await api("/api/theme",{method:"POST",body:JSON.stringify(currentTheme())});const r=await api("/api/create-launcher",{method:"POST",body:"{}"});showNotice(`已生成“${r.appName}”应用入口，并放到${r.locationLabel||"本机应用目录"}。`,true);}catch(e){showNotice(`生成失败：${e.message}`);}finally{setBusy(b,false);b.disabled=!state.brandImage;}}
 async function resetTheme(){const b=$("#resetButton");setBusy(b,true,"恢复中…");try{const r=await api("/api/reset",{method:"POST",body:"{}"});setTheme(r.theme||{...presets[0],brandImage:"",brandName:"灵犀",syncIdentityMemory:true,decorationImage:"",decorationOpacity:.22,decorationMode:"wallpaper",backgroundScope:"content",backgroundFit:"cover",backgroundPosition:"center",backgroundOverlay:.52,backgroundBlur:0,enabled:false});$("#paletteResult").hidden=true;renderStatus(r.status);showNotice(r.applied?`已恢复灵犀默认 Logo、名称和皮肤${r.memoryRemoved?"，并移除品牌身份记忆":""}。`:"已取消皮肤，下次连接时保持默认。",true);}catch(e){showNotice(e.message);}finally{setBusy(b,false);}}
 
@@ -337,6 +339,7 @@ $("#removeDecoration").addEventListener("click",e=>{e.stopPropagation();state.de
 $("#reExtractPalette").addEventListener("click",applyExtractedPalette);
 $("#applyButton").addEventListener("click",saveAndApply);
 $("#connectButton").addEventListener("click",restartAndConnect);
+$("#selectLingxiButton").addEventListener("click",selectLingxiProgram);
 $("#createLauncherButton").addEventListener("click",createPersonalLauncher);
 $("#resetButton").addEventListener("click",resetTheme);
 
