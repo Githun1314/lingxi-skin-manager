@@ -6,11 +6,11 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v0.8.2
+        default: v0.8.3
       title:
         description: Release title
         required: true
-        default: v0.8.2 · 金小獴探头姿势校准
+        default: v0.8.3 · Windows 客户端识别修复
       base_mac_tag:
         description: Stable macOS application shell release
         required: true

@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented here.
 
+## [0.8.3] - 2026-07-24
+
+- Expanded Windows client discovery across additional per-user locations and nested version directories.
+- Added automatic discovery from running processes, uninstall registry entries, desktop shortcuts and Start menu shortcuts.
+- Added a native “选择灵犀程序” fallback that remembers the selected independent client for future launches.
+- Added separate error guidance for the WPS Office embedded plugin and the standalone client.
+- Added Windows tests for nested installs, custom drives and embedded-plugin rejection.
+
 ## [0.8.2] - 2026-07-23
 
 - Recalibrated 金小獴探头 around its intended neck anchor: the head stays above the composer while the scarf and long forearms naturally overlap the input area.

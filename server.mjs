@@ -23,6 +23,7 @@ const DATA_DIR = IS_WINDOWS
   ? path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "Lingxi Skin Manager")
   : path.join(os.homedir(), "Library", "Application Support", "Lingxi Skin Manager");
 const THEME_FILE = path.join(DATA_DIR, "theme.json");
+const CLIENT_PATH_FILE = path.join(DATA_DIR, "lingxi-client-path.txt");
 const MAX_BODY = 8 * 1024 * 1024;
 let cachedLingxiExecutable = null;
 
@@ -131,6 +132,21 @@ async function saveTheme(theme) {
     const extension = match[1].toLowerCase() === "jpeg" ? "jpg" : match[1].toLowerCase();
     await fs.writeFile(path.join(DATA_DIR, `brand-logo.${extension}`), Buffer.from(match[2], "base64"));
   }
+}
+
+async function loadSavedLingxiExecutable() {
+  if (!IS_WINDOWS) return "";
+  try {
+    return (await fs.readFile(CLIENT_PATH_FILE, "utf8")).trim();
+  } catch {
+    return "";
+  }
+}
+
+async function saveLingxiExecutable(executable) {
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.writeFile(CLIENT_PATH_FILE, `${executable}\n`, "utf8");
+  cachedLingxiExecutable = executable;
 }
 
 function brandAssetUrl(theme) {
@@ -649,6 +665,104 @@ async function restoreConnectedPages() {
   return pages.length;
 }
 
+function normalizeWindowsExecutableHint(value) {
+  if (!value) return "";
+  const unquoted = value.trim().replace(/^"(.*)"$/, "$1");
+  const withoutIconIndex = unquoted.replace(/,\s*-?\d+\s*$/, "");
+  const executableMatch = withoutIconIndex.match(/^"?([^"]+?\.exe)"?(?:\s|$)/i);
+  return (executableMatch?.[1] || withoutIconIndex).trim();
+}
+
+async function windowsLingxiExecutableHints() {
+  if (!IS_WINDOWS) return [];
+  const script = `
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$paths = New-Object System.Collections.Generic.List[string]
+Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+  Where-Object { $_.Name -match 'lingxi|灵犀' -or $_.ExecutablePath -match 'lingxi|灵犀' } |
+  ForEach-Object { if ($_.ExecutablePath) { $paths.Add($_.ExecutablePath) } }
+$registryRoots = @(
+  'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+  'HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+  'HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
+)
+foreach ($registryRoot in $registryRoots) {
+  Get-ItemProperty $registryRoot -ErrorAction SilentlyContinue |
+    Where-Object { $_.DisplayName -match '灵犀|Lingxi' } |
+    ForEach-Object {
+      if ($_.DisplayIcon) { $paths.Add([string]$_.DisplayIcon) }
+      if ($_.InstallLocation) { $paths.Add([string]$_.InstallLocation) }
+    }
+}
+$shell = New-Object -ComObject WScript.Shell
+$shortcutRoots = @(
+  [Environment]::GetFolderPath('Desktop'),
+  [Environment]::GetFolderPath('StartMenu'),
+  [Environment]::GetFolderPath('CommonStartMenu')
+)
+foreach ($shortcutRoot in $shortcutRoots) {
+  if (-not $shortcutRoot) { continue }
+  Get-ChildItem $shortcutRoot -Filter '*.lnk' -File -Recurse -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -match '灵犀|Lingxi' } |
+    ForEach-Object {
+      $target = $shell.CreateShortcut($_.FullName).TargetPath
+      if ($target) { $paths.Add($target) }
+    }
+}
+$paths | Where-Object { $_ } | Select-Object -Unique
+`;
+  try {
+    const { stdout } = await execFileAsync(
+      "powershell.exe",
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script],
+      { windowsHide: true, encoding: "utf8", maxBuffer: 1024 * 1024 }
+    );
+    return stdout.split(/\r?\n/).map(normalizeWindowsExecutableHint).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+async function selectWindowsLingxiExecutable() {
+  if (!IS_WINDOWS) throw new Error("只有 Windows 版需要选择灵犀程序");
+  const initialDirectory = process.env.LOCALAPPDATA
+    ? path.win32.join(process.env.LOCALAPPDATA, "Programs")
+    : os.homedir();
+  const script = `
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+Add-Type -AssemblyName System.Windows.Forms
+$dialog = New-Object System.Windows.Forms.OpenFileDialog
+$dialog.Title = '选择灵犀独立客户端或桌面快捷方式'
+$dialog.Filter = '灵犀程序或快捷方式 (*.exe;*.lnk)|*.exe;*.lnk'
+$dialog.CheckFileExists = $true
+$dialog.Multiselect = $false
+$dialog.InitialDirectory = ${powerShellQuote(initialDirectory)}
+if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+  $selected = $dialog.FileName
+  if ([System.IO.Path]::GetExtension($selected) -ieq '.lnk') {
+    $shell = New-Object -ComObject WScript.Shell
+    $selected = $shell.CreateShortcut($selected).TargetPath
+  }
+  Write-Output $selected
+}
+`;
+  const { stdout } = await execFileAsync(
+    "powershell.exe",
+    ["-NoProfile", "-STA", "-ExecutionPolicy", "Bypass", "-Command", script],
+    { windowsHide: false, encoding: "utf8" }
+  );
+  const selected = normalizeWindowsExecutableHint(stdout);
+  if (!selected) throw new Error("没有选择程序");
+  if (!await fileExists(selected)) throw new Error("选择的程序不存在，请重新选择");
+  const executable = await findWindowsLingxiExecutable(
+    { ...process.env, LINGXI_APP_PATH: selected },
+    fs
+  );
+  await saveLingxiExecutable(executable);
+  lastError = "";
+  return executable;
+}
+
 async function findLingxiExecutable() {
   if (cachedLingxiExecutable && await fileExists(cachedLingxiExecutable)) return cachedLingxiExecutable;
   if (IS_MACOS) {
@@ -657,7 +771,20 @@ async function findLingxiExecutable() {
     return cachedLingxiExecutable;
   }
   if (IS_WINDOWS) {
-    cachedLingxiExecutable = await findWindowsLingxiExecutable();
+    const saved = await loadSavedLingxiExecutable();
+    if (saved && await fileExists(saved)) {
+      cachedLingxiExecutable = await findWindowsLingxiExecutable(
+        { ...process.env, LINGXI_APP_PATH: saved },
+        fs
+      );
+      return cachedLingxiExecutable;
+    }
+    cachedLingxiExecutable = await findWindowsLingxiExecutable(
+      process.env,
+      fs,
+      { candidateFiles: await windowsLingxiExecutableHints() }
+    );
+    await saveLingxiExecutable(cachedLingxiExecutable);
     return cachedLingxiExecutable;
   }
   throw new Error(`暂不支持当前系统：${PLATFORM}`);
@@ -884,6 +1011,7 @@ async function statusPayload() {
   const connected = await isConnected();
   return {
     platform: PLATFORM,
+    appSelectionAvailable: IS_WINDOWS,
     running: connected || await isLingxiRunning(),
     connected,
     enabled: currentTheme.enabled,
@@ -957,6 +1085,15 @@ async function api(request, response, url) {
       const memorySynced = currentTheme.syncIdentityMemory && Boolean(memoryResult?.ok);
       const memoryRemoved = !currentTheme.syncIdentityMemory && Boolean(memoryResult?.removed);
       return sendJson(response, 200, { ok: true, ...result, memorySynced, memoryRemoved, status: await statusPayload() });
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/select-lingxi") {
+      const executable = await selectWindowsLingxiExecutable();
+      return sendJson(response, 200, {
+        ok: true,
+        executableName: path.basename(executable),
+        status: await statusPayload()
+      });
     }
 
     if (request.method === "POST" && url.pathname === "/api/create-launcher") {
