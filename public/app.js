@@ -291,6 +291,7 @@ function showNotice(message, success=false) { $("#notice").textContent=message; 
 function setBusy(button,busy,text) { if(!button.dataset.label) button.dataset.label=button.textContent; button.disabled=busy; button.textContent=busy?text:button.dataset.label; }
 function renderStatus(status) {
   state.platform=status.platform||state.platform;
+  if(status.version) $("#appVersion").textContent=`v${status.version}`;
   $("#selectLingxiButton").hidden=!status.appSelectionAvailable;
   if(state.platform==="win32") $("#launcherDescription").textContent="把这套 Logo 和名称生成到 Windows 桌面和开始菜单；实际运行的仍是官方 WPS 灵犀独立客户端。";
   else if(state.platform==="darwin") $("#launcherDescription").textContent="把这套 Logo 和名称生成到 Finder、启动台或程序坞；实际运行的仍是官方 WPS 灵犀。";

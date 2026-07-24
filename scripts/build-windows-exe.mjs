@@ -13,6 +13,7 @@ if (nodeMajor < 26) {
 }
 
 const root = path.resolve(import.meta.dirname, "..");
+const packageMetadata = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"));
 const workDir = path.join(root, "dist", "windows-sea");
 const bundlePath = path.join(workDir, "server-bundle.mjs");
 const configPath = path.join(workDir, "sea-config.json");
@@ -28,6 +29,9 @@ await build({
   target: "node26",
   format: "esm",
   outfile: bundlePath,
+  define: {
+    __APP_VERSION__: JSON.stringify(packageMetadata.version)
+  },
   sourcemap: false,
   minify: false
 });
