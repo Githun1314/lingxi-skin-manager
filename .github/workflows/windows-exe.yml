@@ -9,6 +9,7 @@ on:
       - "public/**"
       - "scripts/build-windows-exe.mjs"
       - "scripts/set-windows-gui-subsystem.mjs"
+      - "scripts/test-windows-stale-manager.mjs"
       - "scripts/test-windows-platform.mjs"
       - "server.mjs"
       - "package.json"
@@ -20,6 +21,7 @@ on:
       - "public/**"
       - "scripts/build-windows-exe.mjs"
       - "scripts/set-windows-gui-subsystem.mjs"
+      - "scripts/test-windows-stale-manager.mjs"
       - "scripts/test-windows-platform.mjs"
       - "server.mjs"
       - "package.json"
@@ -48,22 +50,43 @@ jobs:
         shell: powershell
         run: |
           $exe = Join-Path $PWD "dist\WPS-Lingxi-Skin-Manager-Windows-x64.exe"
+          $expectedVersion = (Get-Content package.json | ConvertFrom-Json).version
+          $legacyStdout = Join-Path $env:RUNNER_TEMP "legacy-manager-stdout.log"
+          $legacyStderr = Join-Path $env:RUNNER_TEMP "legacy-manager-stderr.log"
           $stdout = Join-Path $env:RUNNER_TEMP "manager-stdout.log"
           $stderr = Join-Path $env:RUNNER_TEMP "manager-stderr.log"
-          $statusFile = Join-Path $env:RUNNER_TEMP "manager-status.json"
+          $metaFile = Join-Path $env:RUNNER_TEMP "manager-meta.json"
           $pageFile = Join-Path $env:RUNNER_TEMP "manager-index.html"
+          $legacy = Start-Process -FilePath node -ArgumentList "scripts/test-windows-stale-manager.mjs","--legacy-server" -RedirectStandardOutput $legacyStdout -RedirectStandardError $legacyStderr -PassThru
+          $legacyReady = $false
+          for ($index = 0; $index -lt 40; $index++) {
+            & curl.exe --fail --silent --output NUL "http://127.0.0.1:17363/api/status" 2>$null
+            if ($LASTEXITCODE -eq 0) {
+              $legacyReady = $true
+              break
+            }
+            Start-Sleep -Milliseconds 100
+          }
+          if (-not $legacyReady) {
+            if (Test-Path $legacyStdout) { Get-Content $legacyStdout }
+            if (Test-Path $legacyStderr) { Get-Content $legacyStderr }
+            throw "The legacy manager fixture did not start."
+          }
           $process = Start-Process -FilePath $exe -ArgumentList "--background" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
           try {
             $ready = $false
             $ErrorActionPreference = "SilentlyContinue"
             for ($index = 0; $index -lt 80; $index++) {
-              & curl.exe --fail --silent --show-error --output $statusFile "http://127.0.0.1:17363/api/status" 2>$null
-              $statusExit = $LASTEXITCODE
+              & curl.exe --fail --silent --show-error --output $metaFile "http://127.0.0.1:17363/api/meta" 2>$null
+              $metaExit = $LASTEXITCODE
               & curl.exe --fail --silent --show-error --output $pageFile "http://127.0.0.1:17363/" 2>$null
               $pageExit = $LASTEXITCODE
-              if ($statusExit -eq 0 -and $pageExit -eq 0 -and (Get-Item $statusFile).Length -gt 20 -and (Get-Item $pageFile).Length -gt 1000) {
-                $ready = $true
-                break
+              if ($metaExit -eq 0 -and $pageExit -eq 0 -and (Get-Item $metaFile).Length -gt 20 -and (Get-Item $pageFile).Length -gt 1000) {
+                $meta = Get-Content $metaFile | ConvertFrom-Json
+                if ($meta.productId -eq "lingxi-skin-manager" -and $meta.version -eq $expectedVersion) {
+                  $ready = $true
+                  break
+                }
               }
               if ($process.HasExited) { break }
               Start-Sleep -Milliseconds 250
@@ -72,10 +95,14 @@ jobs:
             if (-not $ready) {
               if (Test-Path $stdout) { Get-Content $stdout }
               if (Test-Path $stderr) { Get-Content $stderr }
-              throw "The packaged manager did not serve its embedded interface."
+              throw "The packaged manager did not replace the stale manager and serve the current embedded interface."
             }
+            $legacy.Refresh()
+            if (-not $legacy.HasExited) { throw "The stale manager process was not replaced." }
           } finally {
             if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+            $legacy.Refresh()
+            if (-not $legacy.HasExited) { Stop-Process -Id $legacy.Id -Force }
           }
       - name: Hide command window
         run: node scripts/set-windows-gui-subsystem.mjs dist/WPS-Lingxi-Skin-Manager-Windows-x64.exe

@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here.
 
+## [0.8.4] - 2026-07-24
+
+- Fixed Windows upgrades opening an older manager that was still serving the local interface.
+- Added safe takeover of a verified legacy manager process before the new EXE starts serving.
+- Added an embedded version endpoint and visible version label so users can confirm which build is running.
+- Added a Windows packaged-app integration test that starts a legacy manager and verifies replacement by the current EXE.
+
 ## [0.8.3] - 2026-07-24
 
 - Expanded Windows client discovery across additional per-user locations and nested version directories.

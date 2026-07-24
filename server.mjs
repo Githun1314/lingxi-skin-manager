@@ -19,6 +19,15 @@ const IS_SEA = isSea();
 const MAC_APP_PATH = "/Applications/WPS 灵犀.app";
 const MAC_APP_EXECUTABLE = `${MAC_APP_PATH}/Contents/MacOS/WPS 灵犀`;
 const PUBLIC_DIR = path.join(import.meta.dirname, "public");
+const BUNDLED_APP_VERSION = typeof __APP_VERSION__ === "string" ? __APP_VERSION__ : "";
+const APP_VERSION = BUNDLED_APP_VERSION || await (async () => {
+  try {
+    return JSON.parse(await fs.readFile(path.join(import.meta.dirname, "package.json"), "utf8")).version;
+  } catch {
+    return "dev";
+  }
+})();
+const PRODUCT_ID = "lingxi-skin-manager";
 const DATA_DIR = IS_WINDOWS
   ? path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "Lingxi Skin Manager")
   : path.join(os.homedir(), "Library", "Application Support", "Lingxi Skin Manager");
@@ -1010,6 +1019,7 @@ async function createPersonalLauncher() {
 async function statusPayload() {
   const connected = await isConnected();
   return {
+    version: APP_VERSION,
     platform: PLATFORM,
     appSelectionAvailable: IS_WINDOWS,
     running: connected || await isLingxiRunning(),
@@ -1038,6 +1048,9 @@ function sendJson(response, status, payload) {
 
 async function api(request, response, url) {
   try {
+    if (request.method === "GET" && url.pathname === "/api/meta") {
+      return sendJson(response, 200, { productId: PRODUCT_ID, version: APP_VERSION });
+    }
     if (request.method === "GET" && url.pathname === "/api/status") return sendJson(response, 200, await statusPayload());
     if (request.method === "GET" && url.pathname === "/api/theme") return sendJson(response, 200, currentTheme);
 
@@ -1142,23 +1155,121 @@ const server = http.createServer(async (request, response) => {
   return serveStatic(response, url);
 });
 
-server.on("error", error => {
-  if (error.code === "EADDRINUSE") {
-    if (IS_WINDOWS && IS_SEA && !process.argv.includes("--background")) {
+async function existingManagerVersion() {
+  try {
+    const metaResponse = await fetch(`http://${HOST}:${PORT}/api/meta`, {
+      signal: AbortSignal.timeout(1200),
+      headers: { "Cache-Control": "no-cache" }
+    });
+    const meta = metaResponse.ok ? await metaResponse.json() : null;
+    if (meta?.productId === PRODUCT_ID) return String(meta.version || "unknown");
+  } catch {}
+
+  try {
+    const [statusResponse, pageResponse] = await Promise.all([
+      fetch(`http://${HOST}:${PORT}/api/status`, { signal: AbortSignal.timeout(1200) }),
+      fetch(`http://${HOST}:${PORT}/`, { signal: AbortSignal.timeout(1200) })
+    ]);
+    const status = statusResponse.ok ? await statusResponse.json() : null;
+    const page = pageResponse.ok ? await pageResponse.text() : "";
+    if (status?.platform && typeof status.connected === "boolean" && page.includes("灵犀皮肤管理器")) {
+      return "legacy";
+    }
+  } catch {}
+  return "";
+}
+
+async function windowsPortOwnerPid() {
+  if (!IS_WINDOWS) return 0;
+  const script = `
+$connection = Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort ${PORT} -State Listen -ErrorAction SilentlyContinue |
+  Select-Object -First 1
+if ($connection) { Write-Output $connection.OwningProcess }
+`;
+  try {
+    const { stdout } = await execFileAsync(
+      "powershell.exe",
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script],
+      { windowsHide: true, encoding: "utf8" }
+    );
+    const pid = Number(stdout.trim());
+    return Number.isInteger(pid) && pid > 0 ? pid : 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function waitForManagerPortToClose(timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      await fetch(`http://${HOST}:${PORT}/api/status`, { signal: AbortSignal.timeout(350) });
+      await new Promise(resolve => setTimeout(resolve, 180));
+    } catch {
+      return true;
+    }
+  }
+  return false;
+}
+
+let takeoverAttempted = false;
+async function handleAddressInUse() {
+  const runningVersion = await existingManagerVersion();
+  if (!IS_WINDOWS || !IS_SEA || !runningVersion) {
+    process.exit(0);
+    return;
+  }
+  if (runningVersion === APP_VERSION) {
+    if (!process.argv.includes("--background")) {
       spawn("explorer.exe", [`http://${HOST}:${PORT}`], { detached: true, stdio: "ignore" }).unref();
     }
     process.exit(0);
+    return;
+  }
+  if (takeoverAttempted) {
+    process.exit(1);
+    return;
+  }
+  takeoverAttempted = true;
+  const ownerPid = await windowsPortOwnerPid();
+  if (!ownerPid || ownerPid === process.pid) {
+    process.exit(1);
+    return;
+  }
+  try {
+    await execFileAsync(
+      "taskkill.exe",
+      ["/PID", String(ownerPid), "/T", "/F"],
+      { windowsHide: true }
+    );
+  } catch {
+    process.exit(1);
+    return;
+  }
+  if (!await waitForManagerPortToClose()) {
+    process.exit(1);
+    return;
+  }
+  server.listen(PORT, HOST);
+}
+
+server.on("error", error => {
+  if (error.code === "EADDRINUSE") {
+    void handleAddressInUse();
+    return;
   }
   throw error;
 });
 
-server.listen(PORT, HOST, () => {
+server.on("listening", () => {
   const managerUrl = `http://${HOST}:${PORT}`;
   console.log(`Lingxi Skin Manager: ${managerUrl}`);
   if (IS_WINDOWS && IS_SEA && !process.argv.includes("--background")) {
     spawn("explorer.exe", [managerUrl], { detached: true, stdio: "ignore" }).unref();
   }
 });
+
+server.listen(PORT, HOST);
 
 setInterval(async () => {
   if (polling || !currentTheme.enabled) return;
