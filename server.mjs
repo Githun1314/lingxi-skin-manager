@@ -547,7 +547,6 @@ class CdpSession {
     this.id = 0;
     this.pending = new Map();
     this.socket = null;
-    this.styleSheetId = null;
   }
 
   async connect() {
@@ -567,8 +566,6 @@ class CdpSession {
       });
       socket.addEventListener("close", () => sessions.delete(this.target.id));
     });
-    await this.send("DOM.enable");
-    await this.send("CSS.enable");
   }
 
   send(method, params = {}) {
@@ -765,7 +762,8 @@ if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
   if (!await fileExists(selected)) throw new Error("选择的程序不存在，请重新选择");
   const executable = await findWindowsLingxiExecutable(
     { ...process.env, LINGXI_APP_PATH: selected },
-    fs
+    fs,
+    { excludeFiles: [process.execPath] }
   );
   await saveLingxiExecutable(executable);
   lastError = "";
@@ -782,16 +780,25 @@ async function findLingxiExecutable() {
   if (IS_WINDOWS) {
     const saved = await loadSavedLingxiExecutable();
     if (saved && await fileExists(saved)) {
-      cachedLingxiExecutable = await findWindowsLingxiExecutable(
-        { ...process.env, LINGXI_APP_PATH: saved },
-        fs
-      );
-      return cachedLingxiExecutable;
+      try {
+        cachedLingxiExecutable = await findWindowsLingxiExecutable(
+          { ...process.env, LINGXI_APP_PATH: saved },
+          fs,
+          { excludeFiles: [process.execPath] }
+        );
+        return cachedLingxiExecutable;
+      } catch {
+        await fs.rm(CLIENT_PATH_FILE, { force: true }).catch(() => {});
+        cachedLingxiExecutable = null;
+      }
     }
     cachedLingxiExecutable = await findWindowsLingxiExecutable(
       process.env,
       fs,
-      { candidateFiles: await windowsLingxiExecutableHints() }
+      {
+        candidateFiles: await windowsLingxiExecutableHints(),
+        excludeFiles: [process.execPath]
+      }
     );
     await saveLingxiExecutable(cachedLingxiExecutable);
     return cachedLingxiExecutable;

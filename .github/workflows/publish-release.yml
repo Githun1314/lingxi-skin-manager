@@ -6,11 +6,11 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v0.8.4
+        default: v0.8.5
       title:
         description: Release title
         required: true
-        default: v0.8.4 · Windows 新版接管与版本标识
+        default: v0.8.5 · 修复 Windows 客户端误识别
       base_mac_tag:
         description: Stable macOS application shell release
         required: true
