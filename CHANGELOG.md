@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [0.8.5] - 2026-07-24
+
+- Fixed Windows client discovery mistaking the skin manager EXE for WPS 灵犀.
+- Automatically discarded previously saved self-referential client paths and rediscovered the real standalone client.
+- Added regression coverage for manager-process hints, renamed executables and persisted-path recovery.
+
 ## [0.8.4] - 2026-07-24
 
 - Fixed Windows upgrades opening an older manager that was still serving the local interface.
